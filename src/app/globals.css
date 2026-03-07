@@ -1,0 +1,446 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Design tokens ──────────────────────────────────────────────────────────── */
+:root {
+  --background: #050a0f;
+  --foreground: #e8eaf0;
+
+  /* Quest Mode palette */
+  --quest-amber: #e8a217;
+  --quest-cyan: #22d3ee;
+  --quest-red: #ef4444;
+  --quest-green: #10b981;
+  --quest-border: rgba(255, 255, 255, 0.06);
+
+  /* Font variables */
+  --font-display: var(--font-rajdhani), "Impact", "Arial Narrow", sans-serif;
+  --font-data: var(--font-geist-mono), "Courier New", monospace;
+}
+
+/* ─── Base styles ─────────────────────────────────────────────────────────── */
+html,
+body {
+  height: 100%;
+  overscroll-behavior: none;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Scanline overlay (Quest Mode aesthetic) ─────────────────────────────── */
+.scanlines::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.06) 2px,
+    rgba(0, 0, 0, 0.06) 4px
+  );
+}
+
+/* ─── HUD grid background ────────────────────────────────────────────────── */
+.hud-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* ─── Custom scrollbar ───────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 2px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(232, 162, 23, 0.3);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(232, 162, 23, 0.5);
+}
+
+/* ─── Utilities ──────────────────────────────────────────────────────────── */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .font-data {
+    font-family: var(--font-data);
+  }
+
+  /* Animated shimmer for loading states */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.05) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  /* Glow variants */
+  .glow-amber {
+    box-shadow: 0 0 20px rgba(232, 162, 23, 0.2);
+  }
+  .glow-cyan {
+    box-shadow: 0 0 20px rgba(34, 211, 238, 0.2);
+  }
+}
+
+/* ─── Framer Motion helpers ──────────────────────────────────────────────── */
+.animate-in {
+  animation-fill-mode: both;
+}
+
+/* ─── Mode-specific CSS variables ────────────────────────────────────────── */
+:root {
+  --story-bg: #0a0612;
+  --story-accent: #c89b3c;
+  --story-glow: #7b3fc4;
+  --story-surface: rgba(20, 10, 40, 0.75);
+  --story-border: rgba(200, 155, 60, 0.25);
+
+  --quest-bg: #020d14;
+  --quest-accent: #00d4ff;
+  --quest-glow: #0066aa;
+  --quest-surface: rgba(2, 20, 35, 0.8);
+  --quest-border: rgba(0, 212, 255, 0.2);
+
+  /* Font aliases for Story/Quest mode components */
+  --font-cinzel: var(--font-rajdhani);    /* Fallback until Cinzel is loaded */
+  --font-dm-mono: var(--font-geist-mono); /* Fallback until DM Mono is loaded */
+  --font-outfit: var(--font-geist-sans);  /* Fallback until Outfit is loaded */
+}
+
+/* ─── Additional font utilities ──────────────────────────────────────────── */
+@layer utilities {
+  .font-mono-dm {
+    font-family: var(--font-dm-mono), var(--font-geist-mono), "Courier New", monospace;
+  }
+  .font-body {
+    font-family: var(--font-outfit), var(--font-geist-sans), system-ui, sans-serif;
+  }
+}
+
+/* ─── Glass Morphism Panels ──────────────────────────────────────────────── */
+
+.glass {
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-story {
+  background: var(--story-surface);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid var(--story-border);
+}
+
+.glass-quest {
+  background: var(--quest-surface);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid var(--quest-border);
+}
+
+/* ─── Glow Borders ───────────────────────────────────────────────────────── */
+
+.border-glow-story {
+  box-shadow:
+    0 0 0 1px rgba(200, 155, 60, 0.25),
+    0 0 18px rgba(123, 63, 196, 0.22),
+    inset 0 0 18px rgba(200, 155, 60, 0.04);
+}
+
+.border-glow-quest {
+  box-shadow:
+    0 0 0 1px rgba(0, 212, 255, 0.2),
+    0 0 18px rgba(0, 102, 170, 0.28),
+    inset 0 0 18px rgba(0, 212, 255, 0.04);
+}
+
+/* ─── Glowing Text ───────────────────────────────────────────────────────── */
+
+.text-glow-story {
+  text-shadow: 0 0 20px rgba(200, 155, 60, 0.55), 0 0 40px rgba(123, 63, 196, 0.2);
+}
+
+.text-glow-quest {
+  text-shadow: 0 0 20px rgba(0, 212, 255, 0.55), 0 0 40px rgba(0, 102, 170, 0.25);
+}
+
+/* ─── Overlay / Backdrop ─────────────────────────────────────────────────── */
+
+.overlay-dim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* ─── Camera Background ──────────────────────────────────────────────────── */
+
+.camera-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+/* ─── Safe Area Utilities ────────────────────────────────────────────────── */
+
+.safe-top {
+  padding-top: max(12px, env(safe-area-inset-top));
+}
+
+.safe-bottom {
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
+}
+
+/* ─── Touch Target ───────────────────────────────────────────────────────── */
+
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ─── Buttons ────────────────────────────────────────────────────────────── */
+
+.btn-quest {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(0, 212, 255, 0.1);
+  border: 1px solid rgba(0, 212, 255, 0.4);
+  color: #00d4ff;
+  font-family: var(--font-dm-mono), var(--font-geist-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border-radius: 6px;
+  transition: all 0.2s;
+  min-height: 44px;
+  padding: 0 16px;
+  cursor: pointer;
+}
+
+.btn-quest:active {
+  background: rgba(0, 212, 255, 0.22);
+  transform: scale(0.98);
+}
+
+.btn-story {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(200, 155, 60, 0.12);
+  border: 1px solid rgba(200, 155, 60, 0.4);
+  color: #c89b3c;
+  font-family: var(--font-cinzel), var(--font-rajdhani), Georgia, serif;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border-radius: 6px;
+  transition: all 0.2s;
+  min-height: 44px;
+  padding: 0 16px;
+  cursor: pointer;
+}
+
+.btn-story:active {
+  background: rgba(200, 155, 60, 0.2);
+  transform: scale(0.98);
+}
+
+.btn-ghost {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.45);
+  font-family: var(--font-dm-mono), var(--font-geist-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  border-radius: 6px;
+  transition: all 0.2s;
+  min-height: 44px;
+  padding: 0 16px;
+  cursor: pointer;
+}
+
+.btn-ghost:active {
+  transform: scale(0.98);
+}
+
+/* ─── Bottom Sheet ───────────────────────────────────────────────────────── */
+
+.bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-radius: 20px 20px 0 0;
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
+  z-index: 40;
+}
+
+/* ─── Gradient Backgrounds ───────────────────────────────────────────────── */
+
+.bg-story-gradient {
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(123,63,196,0.35) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 80%, rgba(200,155,60,0.2) 0%, transparent 60%),
+    #0a0612;
+}
+
+.bg-quest-gradient {
+  background:
+    radial-gradient(ellipse at 20% 80%, rgba(0,102,170,0.4) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(0,212,255,0.15) 0%, transparent 60%),
+    #020d14;
+}
+
+/* ─── Grain Overlay ──────────────────────────────────────────────────────── */
+
+.grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  pointer-events: none;
+  opacity: 0.35;
+}
+
+/* ─── Animation Utilities ────────────────────────────────────────────────── */
+
+@keyframes fadeUp {
+  0%   { opacity: 0; transform: translateY(16px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes pulse2 {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(0,212,255,0.3); }
+  50%       { box-shadow: 0 0 24px rgba(0,212,255,0.7); }
+}
+
+@keyframes musicBar {
+  0%   { transform: scaleY(0.4); opacity: 0.5; }
+  50%  { transform: scaleY(1);   opacity: 0.85; }
+  100% { transform: scaleY(0.55); opacity: 0.6; }
+}
+
+.animate-fade-up   { animation: fadeUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-fade-in   { animation: fadeIn 0.4s ease both; }
+.animate-pulse2    { animation: pulse2 2s ease-in-out infinite; }
+.animate-glow-pulse { animation: glowPulse 2s ease-in-out infinite; }
+
+/* ─── Active Scale ───────────────────────────────────────────────────────── */
+
+.active\:scale-98:active { transform: scale(0.98); }
+
+/* ─── Momentum Pulse ─────────────────────────────────────────────────────── */
+
+@keyframes momentumPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.7; }
+}
+
+.momentum-high { animation: momentumPulse 0.8s ease-in-out infinite; }
+
+/* ─── Scanline Sweep ─────────────────────────────────────────────────────── */
+
+@keyframes scanlineSweep {
+  0%   { transform: translateY(-100%); opacity: 0.6; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
+
+.scanline-sweep {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 212, 255, 0.06) 45%,
+    rgba(0, 212, 255, 0.15) 50%,
+    rgba(0, 212, 255, 0.06) 55%,
+    transparent 100%
+  );
+  animation: scanlineSweep 2s linear infinite;
+}
+
+/* ─── Story glow pulse ───────────────────────────────────────────────────── */
+
+@keyframes storyGlowPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(123, 63, 196, 0); }
+  50%       { box-shadow: 0 0 32px 8px rgba(123, 63, 196, 0.35); }
+}
+
+.story-scan-pulse { animation: storyGlowPulse 2s ease-in-out infinite; }
+
+/* ─── Mission category badge ─────────────────────────────────────────────── */
+
+.mission-badge {
+  font-family: var(--font-dm-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 2px;
+  border: 1px solid currentColor;
+  opacity: 0.8;
+}
+
+/* ─── Relationship bar fills ─────────────────────────────────────────────── */
+
+.relationship-fill-positive {
+  background: linear-gradient(to right, #c89b3c, #f0c060);
+}
+
+.relationship-fill-negative {
+  background: linear-gradient(to right, #7b3fc4, #c44);
+}
