@@ -1,17 +1,25 @@
 "use client";
 
-import { Suspense, useState, useCallback } from "react";
+import { Suspense, useState, useCallback, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { StoryHUD } from "@/components/story/StoryHUD";
 import { ObjectLabel } from "@/components/story/ObjectLabel";
 import { InteractionModal } from "@/components/story/InteractionModal";
 import NarrationBanner from "@/components/shared/NarrationBanner";
-import { Camera } from "@/components/shared/Camera";
+import { Camera, type CameraHandle } from "@/components/shared/Camera";
 import { MOCK_STORY_SESSION } from "@/lib/mock-data";
+import { DEMO_MODE } from "@/lib/constants";
 import type {
   ObjectCharacter,
   InteractionMode,
   StoryGenre,
+  SessionState,
+  CreateSessionRequest,
+  CreateSessionResponse,
+  ScanRequest,
+  ScanResponse,
+  TalkRequest,
+  TalkResponse,
 } from "@/types";
 
 /**
@@ -24,37 +32,162 @@ import type {
  *   3. StoryHUD (bottom)
  *   4. NarrationBanner (top)
  *   5. InteractionModal (conditional — RPG dialogue box)
+ *
+ * When DEMO_MODE = true  → initializes from MOCK_STORY_SESSION; handlers are stubs.
+ * When DEMO_MODE = false → creates a real session via POST /api/session; all handlers
+ *                          call the live API endpoints (scan, talk).
  */
 function StoryContent() {
   const searchParams = useSearchParams();
   const genre = (searchParams.get("genre") ?? "mystery") as StoryGenre;
 
-  const [session] = useState({
-    ...MOCK_STORY_SESSION,
-    storyState: MOCK_STORY_SESSION.storyState
-      ? { ...MOCK_STORY_SESSION.storyState, genre }
-      : undefined,
-  });
-
+  const [session, setSession] = useState<SessionState | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [initLoading, setInitLoading] = useState(true);
   const [selectedCharacter, setSelectedCharacter] = useState<ObjectCharacter | null>(null);
   const [scanLoading, setScanLoading] = useState(false);
+  const cameraRef = useRef<CameraHandle>(null);
 
-  const storyState = (session as import("@/types").SessionState).storyState ?? null;
-  const sessionState = session as import("@/types").SessionState;
-  const latestNarration = sessionState.narrativeLog[sessionState.narrativeLog.length - 1] ?? null;
+  // ── Session initialization ──────────────────────────────────────────────────
+  useEffect(() => {
+    if (DEMO_MODE) {
+      const mock: SessionState = {
+        ...MOCK_STORY_SESSION,
+        storyState: MOCK_STORY_SESSION.storyState
+          ? { ...MOCK_STORY_SESSION.storyState, genre }
+          : undefined,
+      };
+      setSession(mock);
+      setSessionId(mock.id);
+      setInitLoading(false);
+      return;
+    }
 
-  const handleScan = useCallback(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mode: "story", genre } as CreateSessionRequest),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data: CreateSessionResponse = await res.json();
+        if (!cancelled) {
+          setSession(data.initialState);
+          setSessionId(data.sessionId);
+        }
+      } catch (err) {
+        console.error("[Story] Session init failed:", err);
+      } finally {
+        if (!cancelled) setInitLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [genre]);
+
+  // ── Scan handler ────────────────────────────────────────────────────────────
+  const handleScan = useCallback(async () => {
+    if (DEMO_MODE) {
+      setScanLoading(true);
+      setTimeout(() => setScanLoading(false), 2000);
+      return;
+    }
+    if (!sessionId || scanLoading) return;
     setScanLoading(true);
-    setTimeout(() => setScanLoading(false), 2000);
-  }, []);
+    try {
+      const frame = cameraRef.current?.captureFrame() ?? "";
+      const res = await fetch("/api/scan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, frame } as ScanRequest),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data: ScanResponse = await res.json();
+      setSession((prev) =>
+        prev
+          ? {
+              ...prev,
+              sceneGraph: data.sceneGraph,
+              narrativeLog: data.narration
+                ? [...prev.narrativeLog, data.narration]
+                : prev.narrativeLog,
+              storyState:
+                data.updatedStoryState !== undefined
+                  ? data.updatedStoryState
+                  : prev.storyState,
+            }
+          : prev
+      );
+    } catch (err) {
+      console.error("[Story] Scan failed:", err);
+    } finally {
+      setScanLoading(false);
+    }
+  }, [sessionId, scanLoading]);
 
+  // ── Talk handler ────────────────────────────────────────────────────────────
   const handleTalk = useCallback(
-    async (mode: InteractionMode, message: string) => {
-      console.log("[Story] talk:", selectedCharacter?.id, mode, message);
-      return null;
+    async (mode: InteractionMode, message: string): Promise<string | null> => {
+      if (DEMO_MODE) {
+        console.log("[Story] talk:", selectedCharacter?.id, mode, message);
+        return null;
+      }
+      if (!sessionId || !selectedCharacter) return null;
+      try {
+        const res = await fetch("/api/talk", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId,
+            characterId: selectedCharacter.id,
+            interactionMode: mode,
+            message,
+          } as TalkRequest),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data: TalkResponse = await res.json();
+        if (data.narration) {
+          setSession((prev) =>
+            prev
+              ? { ...prev, narrativeLog: [...prev.narrativeLog, data.narration!] }
+              : prev
+          );
+        }
+        return data.response ?? null;
+      } catch (err) {
+        console.error("[Story] Talk failed:", err);
+        return null;
+      }
     },
-    [selectedCharacter]
+    [sessionId, selectedCharacter]
   );
+
+  // ── Loading state ───────────────────────────────────────────────────────────
+  if (initLoading || !session) {
+    return (
+      <div
+        className="relative h-full w-full flex items-center justify-center"
+        style={{ background: "var(--story-bg)" }}
+      >
+        <div
+          className="border-2 px-8 py-6 text-center"
+          style={{
+            borderColor: "#CC0000",
+            boxShadow: "4px 4px 0 rgba(204,0,0,0.5)",
+            background: "rgba(30,6,6,0.95)",
+          }}
+        >
+          <p className="font-pixel text-base animate-pulse2" style={{ color: "#FFDE00" }}>
+            LOADING...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const storyState = session.storyState ?? null;
+  const latestNarration = session.narrativeLog[session.narrativeLog.length - 1] ?? null;
 
   return (
     <div
@@ -63,7 +196,11 @@ function StoryContent() {
     >
       {/* Layer 0: Camera feed */}
       <div className="absolute inset-0 z-0">
-        <Camera className="w-full h-full object-cover opacity-35" mode="story" />
+        <Camera
+          ref={cameraRef}
+          className="w-full h-full object-cover opacity-35"
+          mode="story"
+        />
       </div>
 
       {/* Layer 1: Dark atmosphere + pixel grid */}
@@ -86,7 +223,7 @@ function StoryContent() {
 
       {/* Layer 2: Floating ObjectLabels */}
       {storyState?.characters.map((character: import("@/types").ObjectCharacter, i: number) => {
-        const sceneObject = sessionState.sceneGraph.objects.find((o) => o.id === character.id);
+        const sceneObject = session.sceneGraph.objects.find((o) => o.id === character.id);
         return (
           <ObjectLabel
             key={character.id}
@@ -103,7 +240,7 @@ function StoryContent() {
       <div className="absolute top-0 left-0 z-[20] safe-top px-3 py-3">
         <StoryHUD
           storyState={storyState}
-          sessionStartedAt={sessionState.startedAt}
+          sessionStartedAt={session.startedAt}
           onScan={handleScan}
           onSelectCharacter={setSelectedCharacter}
           scanLoading={scanLoading}

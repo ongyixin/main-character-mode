@@ -435,6 +435,10 @@ export interface ScanResponse {
     contextMatches?: string[];
     missionActivations?: string[];
   };
+  /** Full updated story state — returned in live mode so client can sync characters/relationships */
+  updatedStoryState?: StoryModeState;
+  /** Full updated quest state — returned in live mode so client can sync mission activations */
+  updatedQuestState?: QuestModeState;
 }
 
 export interface MusicResponse {

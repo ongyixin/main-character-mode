@@ -10,3 +10,4 @@ export type { Settings } from "./SettingsPanel";
 export { default as QuickStats } from "./QuickStats";
 export { default as TwinklingStars } from "./TwinklingStars";
 export { default as PixelCharacter } from "./PixelCharacter";
+export { PlayIcon, QuestionIcon, InfoIcon, ShieldIcon, GearIcon, SoundOnIcon, SoundOffIcon } from "./PixelIcons";

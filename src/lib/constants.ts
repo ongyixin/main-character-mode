@@ -1,5 +1,18 @@
 import type { StoryGenre } from "@/types";
 
+/**
+ * Master demo flag.
+ *
+ * true  → use fully hardcoded mock data; no API keys required.
+ *         The app runs offline and shows a scripted session.
+ *
+ * false → remove all hardcoded data. Every game page creates a real
+ *         session via /api/session and calls /api/scan, /api/talk,
+ *         /api/task, /api/progress, etc. Requires GEMINI_API_KEY
+ *         (and optionally LYRIA_API_KEY / NANOBANANA_API_KEY) in .env.local.
+ */
+export const DEMO_MODE = true;
+
 export const STORY_GENRES: {
   value: StoryGenre;
   label: string;

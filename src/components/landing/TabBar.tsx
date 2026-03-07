@@ -1,22 +1,33 @@
 "use client";
 
 import { motion } from "framer-motion";
+import {
+  PlayIcon,
+  QuestionIcon,
+  InfoIcon,
+  ShieldIcon,
+  GearIcon,
+  SoundOnIcon,
+  SoundOffIcon,
+} from "./PixelIcons";
 
 export type TabId = "play" | "howtoplay" | "about" | "community" | "settings";
 
+type IconComponent = React.ComponentType<{ size?: number; color?: string }>;
+
 interface TabDef {
   id: TabId;
-  symbol: string;
+  Icon: IconComponent;
   label: string;
   key: string;
 }
 
 const TABS: TabDef[] = [
-  { id: "play",      symbol: "▶",  label: "PLAY",  key: "1" },
-  { id: "howtoplay", symbol: "?",  label: "GUIDE", key: "2" },
-  { id: "about",     symbol: "★",  label: "ABOUT", key: "3" },
-  { id: "community", symbol: "♡",  label: "GUILD", key: "4" },
-  { id: "settings",  symbol: "⚙",  label: "OPT.",  key: "5" },
+  { id: "play",      Icon: PlayIcon,     label: "PLAY",  key: "1" },
+  { id: "howtoplay", Icon: QuestionIcon, label: "GUIDE", key: "2" },
+  { id: "about",     Icon: InfoIcon,     label: "ABOUT", key: "3" },
+  { id: "community", Icon: ShieldIcon,   label: "GUILD", key: "4" },
+  { id: "settings",  Icon: GearIcon,     label: "OPT.",  key: "5" },
 ];
 
 interface TabBarProps {
@@ -62,6 +73,7 @@ export default function TabBar({
       <div style={{ display: "flex", alignItems: "stretch" }}>
         {TABS.map((tab) => {
           const isActive = activeTab === tab.id;
+          const iconColor = isActive ? "#FFDE00" : "rgba(255,255,255,0.28)";
           return (
             <button
               key={tab.id}
@@ -79,17 +91,18 @@ export default function TabBar({
                 borderRight: "1px solid rgba(255,222,0,0.07)",
               }}
             >
-              {/* Symbol */}
+              {/* Pixel icon */}
               <div
                 style={{
-                  fontSize: 16,
-                  lineHeight: 1,
-                  color: isActive ? "#FFDE00" : "rgba(255,255,255,0.28)",
-                  transition: "color 0.12s",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  height: 14,
                   marginBottom: 3,
+                  transition: "color 0.12s",
                 }}
               >
-                {tab.symbol}
+                <tab.Icon size={14} color={iconColor} />
               </div>
               {/* Label */}
               <div
@@ -156,8 +169,11 @@ export default function TabBar({
           }}
           title={soundEnabled ? "Sound ON" : "Sound OFF"}
         >
-          <div style={{ fontSize: 16, lineHeight: 1, color: soundEnabled ? "#FFDE00" : "rgba(255,255,255,0.22)" }}>
-            {soundEnabled ? "♪" : "♩"}
+          <div style={{ display: "flex", alignItems: "center", height: 14 }}>
+            {soundEnabled
+              ? <SoundOnIcon size={14} color="#FFDE00" />
+              : <SoundOffIcon size={14} color="rgba(255,255,255,0.22)" />
+            }
           </div>
           <div
             className="font-pixel"

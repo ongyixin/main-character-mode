@@ -63,24 +63,31 @@ export async function POST(req: NextRequest) {
         ? relationshipManager.generateInterObjectRelationships(allCharacters)
         : storyState.relationships;
 
-      sessionPatch.storyState = { ...storyState, characters: allCharacters, relationships };
+      const updatedStoryState = { ...storyState, characters: allCharacters, relationships };
+      sessionPatch.storyState = updatedStoryState;
       response.storyHooks = { newCharacters: newCharacters.map((c) => c.id) };
+      // Return full state so clients can sync without a separate round-trip
+      response.updatedStoryState = updatedStoryState;
     } else {
       const questState = session.questState!;
       const { activations, matches } = contextDetector.match(sceneGraph, questState.missions);
 
+      let updatedQuestState = questState;
       if (activations.length > 0) {
         const missions = questState.missions.map((m) =>
           activations.includes(m.id) ? { ...m, status: "active" as const, startedAt: Date.now() } : m
         );
-        sessionPatch.questState = {
+        updatedQuestState = {
           ...questState,
           missions,
           activeMissionId: activations[0] ?? questState.activeMissionId,
         };
+        sessionPatch.questState = updatedQuestState;
       }
 
       response.questHooks = { contextMatches: matches, missionActivations: activations };
+      // Return full state so clients can sync without a separate round-trip
+      response.updatedQuestState = updatedQuestState;
     }
 
     patchSession(body.sessionId, sessionPatch);

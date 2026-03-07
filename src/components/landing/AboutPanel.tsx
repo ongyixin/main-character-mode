@@ -12,7 +12,7 @@ const TECH_STACK = [
 const CREDITS = [
   { role: "CONCEPT & DESIGN",    name: "Main Character Mode Team" },
   { role: "BUILT AT",            name: "YC × Google DeepMind Hackathon 2026" },
-  { role: "RUNTIME",             name: "24 hours" },
+  { role: "RUNTIME",             name: "6.5 hours" },
 ];
 
 export default function AboutPanel() {

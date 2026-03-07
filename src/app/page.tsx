@@ -425,6 +425,7 @@ function ModeOption({
   icon,
   label,
   tagline,
+  tooltip,
   color,
   accent,
 }: {
@@ -433,49 +434,100 @@ function ModeOption({
   icon: string;
   label: string;
   tagline: string;
+  tooltip: string;
   color: string;
   accent: string;
 }) {
+  const [hovered, setHovered] = useState(false);
+
   return (
-    <button
-      onClick={onSelect}
-      className="w-full text-left"
-      style={{
-        padding: "12px 16px",
-        background: active ? accent : "transparent",
-        transition: "background 0.15s",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <PixelCursor color={color} active={active} />
-        <span style={{ fontSize: 20, lineHeight: 1 }}>{icon}</span>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <p
-            className="font-pixel"
-            style={{ fontSize: 16, letterSpacing: "0.14em", color, lineHeight: 1.7 }}
-          >
-            {label}
-          </p>
-          <p className="font-vt" style={{ fontSize: 16, color: "rgba(255,255,255,0.38)", marginTop: 2 }}>
-            {tagline}
-          </p>
-        </div>
-        <AnimatePresence>
-          {active && (
-            <motion.span
-              key="pip"
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0 }}
-              className="font-pixel shrink-0"
-              style={{ fontSize: 16, color }}
+    <div style={{ position: "relative" }}>
+      <button
+        onClick={onSelect}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        onFocus={() => setHovered(true)}
+        onBlur={() => setHovered(false)}
+        className="w-full text-left"
+        style={{
+          padding: "12px 16px",
+          background: active ? accent : "transparent",
+          transition: "background 0.15s",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <PixelCursor color={color} active={active} />
+          <span style={{ fontSize: 20, lineHeight: 1 }}>{icon}</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p
+              className="font-pixel"
+              style={{ fontSize: 16, letterSpacing: "0.14em", color, lineHeight: 1.7 }}
             >
-              ◆
-            </motion.span>
-          )}
-        </AnimatePresence>
-      </div>
-    </button>
+              {label}
+            </p>
+            <p className="font-vt" style={{ fontSize: 16, color: "rgba(255,255,255,0.38)", marginTop: 2 }}>
+              {tagline}
+            </p>
+          </div>
+          <AnimatePresence>
+            {active && (
+              <motion.span
+                key="pip"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0 }}
+                className="font-pixel shrink-0"
+                style={{ fontSize: 16, color }}
+              >
+                ◆
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </div>
+      </button>
+
+      <AnimatePresence>
+        {hovered && (
+          <motion.div
+            key="tooltip"
+            initial={{ opacity: 0, y: -6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.97 }}
+            transition={{ duration: 0.14 }}
+            style={{
+              position: "absolute",
+              top: "calc(100% + 4px)",
+              left: 12,
+              right: 12,
+              zIndex: 60,
+              background: "rgba(4,2,18,0.98)",
+              border: `2px solid ${color}`,
+              boxShadow: `4px 4px 0 ${color}44`,
+              padding: "8px 12px",
+              pointerEvents: "none",
+            }}
+          >
+            {/* corner pip */}
+            <span
+              className="font-pixel"
+              style={{
+                position: "absolute",
+                top: -10,
+                left: 14,
+                fontSize: 16,
+                color,
+                lineHeight: 1,
+              }}
+            >
+              ▲
+            </span>
+            <p className="font-vt" style={{ fontSize: 16, color: "rgba(255,255,255,0.72)", lineHeight: 1.55 }}>
+              {tooltip}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
@@ -601,6 +653,7 @@ function PlayTabModeSelect({
             icon="🎭"
             label="STORY MODE"
             tagline="Objects become characters. Drama ensues."
+            tooltip="Pick a genre and your surroundings transform into a living narrative. Every object gets a personality, forms relationships, and can issue quests. The AI narrates the drama as it unfolds in real time."
             color="#CC0000"
             accent="rgba(204,0,0,0.1)"
           />
@@ -613,6 +666,7 @@ function PlayTabModeSelect({
             icon="⚡"
             label="QUEST MODE"
             tagline="Chores become missions. Life has momentum."
+            tooltip="Enter real-world tasks and they become tactical missions. Scan your environment to trigger context-aware objectives. Complete them to earn XP, build combo streaks, and level up."
             color="#3B4CCA"
             accent="rgba(59,76,202,0.1)"
           />
