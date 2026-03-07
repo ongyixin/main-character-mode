@@ -23,6 +23,7 @@
 html,
 body {
   height: 100%;
+  width: 100%;
   overscroll-behavior: none;
 }
 
@@ -443,4 +444,201 @@ body {
 
 .relationship-fill-negative {
   background: linear-gradient(to right, #7b3fc4, #c44);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Pixel Creature Landing Theme
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --px-sky: #6EC5FF;
+  --px-coral: #FF7E79;
+  --px-yellow: #FFD95A;
+  --px-mint: #7DE2A6;
+  --px-dark: #2B2B2B;
+  --px-cream: #FFF8E7;
+  --px-white: #FFFFFF;
+}
+
+/* ─── Pixel cream background ─────────────────────────────────────────────────── */
+.pixel-bg {
+  background-color: var(--px-cream);
+  image-rendering: pixelated;
+}
+
+/* ─── Pixel panel card ───────────────────────────────────────────────────────── */
+.pixel-panel {
+  background: var(--px-white);
+  border: 3px solid var(--px-dark);
+  border-radius: 4px;
+  box-shadow: 4px 4px 0 var(--px-dark);
+  transition: transform 0.15s, box-shadow 0.15s;
+  image-rendering: auto;
+}
+
+.pixel-panel:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--px-dark);
+}
+
+.pixel-panel:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--px-dark);
+}
+
+/* ─── Pixel button ───────────────────────────────────────────────────────────── */
+.pixel-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--px-coral);
+  color: var(--px-white);
+  font-family: var(--font-pixel), "Press Start 2P", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  border: 3px solid var(--px-dark);
+  border-radius: 4px;
+  padding: 14px 28px;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 var(--px-dark);
+  transition: transform 0.1s, box-shadow 0.1s;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.2);
+  position: relative;
+}
+
+.pixel-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--px-dark);
+}
+
+.pixel-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--px-dark);
+}
+
+/* ─── Pixel icon box ─────────────────────────────────────────────────────────── */
+.pixel-icon-box {
+  width: 48px;
+  height: 48px;
+  border: 2px solid var(--px-dark);
+  border-radius: 4px;
+  box-shadow: 2px 2px 0 var(--px-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+/* ─── Pixel sparkle animation ────────────────────────────────────────────────── */
+@keyframes pixelSparkle {
+  0%, 100% { opacity: 0; transform: scale(0.5) rotate(0deg); }
+  20%      { opacity: 1; transform: scale(1) rotate(45deg); }
+  40%      { opacity: 0; transform: scale(0.5) rotate(90deg); }
+}
+
+.pixel-sparkle {
+  position: absolute;
+  pointer-events: none;
+  animation: pixelSparkle 3s ease-in-out infinite;
+}
+
+/* ─── Pixel float animation ──────────────────────────────────────────────────── */
+@keyframes pixelFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+.pixel-float {
+  animation: pixelFloat 2.5s ease-in-out infinite;
+}
+
+/* ─── Pixel blink animation ──────────────────────────────────────────────────── */
+@keyframes pixelBlink {
+  0%, 90%, 100% { opacity: 1; }
+  95%           { opacity: 0; }
+}
+
+.pixel-blink {
+  animation: pixelBlink 4s steps(1) infinite;
+}
+
+/* ─── Pixel scan line ────────────────────────────────────────────────────────── */
+@keyframes pixelScan {
+  0%   { top: -5%; opacity: 0; }
+  5%   { opacity: 0.5; }
+  95%  { opacity: 0.5; }
+  100% { top: 105%; opacity: 0; }
+}
+
+.pixel-scan-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  pointer-events: none;
+  background: var(--px-sky);
+  opacity: 0.4;
+  animation: pixelScan 5s steps(60) infinite;
+}
+
+/* ─── Pixel bounce ───────────────────────────────────────────────────────────── */
+@keyframes pixelBounce {
+  0%, 100% { transform: translateY(0); }
+  40%      { transform: translateY(-8px); }
+  60%      { transform: translateY(-4px); }
+}
+
+.pixel-bounce {
+  animation: pixelBounce 0.5s ease;
+}
+
+/* ─── Pixel cloud ────────────────────────────────────────────────────────────── */
+.pixel-cloud {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.35;
+}
+
+@keyframes cloudDrift {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(30px); }
+}
+
+.pixel-cloud-drift {
+  animation: cloudDrift 8s ease-in-out infinite alternate;
+}
+
+/* ─── Pixel grass strip ──────────────────────────────────────────────────────── */
+.pixel-grass {
+  background: repeating-linear-gradient(
+    90deg,
+    #7DE2A6 0px, #7DE2A6 8px,
+    #6CD495 8px, #6CD495 16px
+  );
+  height: 8px;
+  image-rendering: pixelated;
+}
+
+/* ─── Retro pixel font utility ───────────────────────────────────────────────── */
+.font-pixel {
+  font-family: var(--font-pixel), "Press Start 2P", monospace;
+}
+
+/* ─── Pixel body font ────────────────────────────────────────────────────────── */
+.font-pixel-body {
+  font-family: var(--font-pixel-body), "Pixelify Sans", system-ui, sans-serif;
+}
+
+/* ─── Genre tag ──────────────────────────────────────────────────────────────── */
+.pixel-tag {
+  display: inline-block;
+  font-family: var(--font-pixel), "Press Start 2P", monospace;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  padding: 4px 8px;
+  border: 2px solid var(--px-dark);
+  border-radius: 2px;
+  box-shadow: 2px 2px 0 var(--px-dark);
 }

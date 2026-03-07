@@ -33,6 +33,21 @@ const config: Config = {
           surface: "rgba(2, 20, 35, 0.75)",
           border: "rgba(0, 212, 255, 0.2)",
         },
+        // Pixel creature landing palette
+        px: {
+          sky: "#6EC5FF",
+          "sky-dark": "#4DAEE8",
+          coral: "#FF7E79",
+          "coral-dark": "#E86560",
+          yellow: "#FFD95A",
+          "yellow-dark": "#E6C24A",
+          mint: "#7DE2A6",
+          "mint-dark": "#5CC889",
+          dark: "#2B2B2B",
+          cream: "#FFF8E7",
+          "cream-dark": "#F5EDD8",
+          white: "#FFFFFF",
+        },
       },
       backgroundImage: {
         "story-gradient":
@@ -49,8 +64,21 @@ const config: Config = {
         scanline: "scanline 3s linear infinite",
         "glow-pulse": "glowPulse 2s ease-in-out infinite",
         ticker: "ticker 0.3s ease-out forwards",
+        "bounce-in": "bounceIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both",
+        float: "float 3s ease-in-out infinite",
+        "spin-slow": "spin 8s linear infinite",
       },
       keyframes: {
+        bounceIn: {
+          "0%": { opacity: "0", transform: "scale(0.3)" },
+          "50%": { opacity: "1", transform: "scale(1.05)" },
+          "70%": { transform: "scale(0.95)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        float: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-8px)" },
+        },
         fadeUp: {
           "0%": { opacity: "0", transform: "translateY(16px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },

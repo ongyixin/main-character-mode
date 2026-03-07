@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
-import { Rajdhani, Cinzel, DM_Mono, Outfit } from "next/font/google";
+import { Rajdhani, Cinzel, DM_Mono, Outfit, Press_Start_2P, Pixelify_Sans } from "next/font/google";
 import "./globals.css";
 
 const geistSans = localFont({
@@ -46,13 +46,29 @@ const outfit = Outfit({
   display: "swap",
 });
 
+/** Retro pixel font for headings */
+const pressStart = Press_Start_2P({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-pixel",
+  display: "swap",
+});
+
+/** Pixel-friendly body text */
+const pixelifySans = Pixelify_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-pixel-body",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "Main Character Mode",
-  description: "Your world. Reframed as a mission.",
+  title: "TinyCatch — Discover Tiny Creatures in the Real World",
+  description: "Point your camera anywhere. AI transforms everyday objects into adorable pixel creatures you can interact with, battle, and befriend.",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#050a0f",
+  themeColor: "#FFF8E7",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -67,7 +83,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${rajdhani.variable} ${cinzel.variable} ${dmMono.variable} ${outfit.variable} antialiased bg-[#050a0f]`}
+        className={`${geistSans.variable} ${geistMono.variable} ${rajdhani.variable} ${cinzel.variable} ${dmMono.variable} ${outfit.variable} ${pressStart.variable} ${pixelifySans.variable} antialiased bg-[#FFF8E7]`}
       >
         {children}
       </body>
