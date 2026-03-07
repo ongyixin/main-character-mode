@@ -8,26 +8,46 @@ import type { ActiveMode, StoryGenre, InteractionMode, MissionCategory } from "@
 // Scene analysis prompts
 // ---------------------------------------------------------------------------
 
-export function sceneAnalysisPrompt(mode: ActiveMode): string {
+export function sceneAnalysisPrompt(mode: ActiveMode, genre?: StoryGenre): string {
   if (mode === "story") {
+    const genreMoodHints: Record<StoryGenre, string> = {
+      dating_sim:       "romantic, intimate, longing — highlight objects with emotional or symbolic resonance",
+      mystery:          "tense, suspicious, shadowy — highlight objects that could hide secrets or clues",
+      fantasy:          "magical, ancient, epic — highlight objects with otherworldly or symbolic potential",
+      survival:         "threatening, resource-scarce, territorial — highlight objects with utility or danger",
+      workplace_drama:  "competitive, stressful, performative — highlight objects that signal status or ambition",
+      soap_opera:       "dramatic, excessive, scandalous — highlight objects involved in conflict or secrets",
+    };
+    const moodInstruction = genre
+      ? `Interpret the mood through a ${genre.replace("_", " ")} lens: ${genreMoodHints[genre]}.`
+      : "Describe the mood neutrally.";
+
     return `Analyze this camera frame and return a JSON object with this exact shape:
 {
   "sceneType": string,       // e.g. "bedroom", "kitchen", "office", "living room"
   "objects": [
     {
-      "id": string,          // slug e.g. "lamp_1"
-      "label": string,       // e.g. "floor lamp"
-      "salience": number,    // 0.0–1.0, how visually prominent
+      "id": string,          // slug e.g. "lamp_1", "book_1", "phone_1"
+      "label": string,       // e.g. "floor lamp", "paperback book", "coffee mug"
+      "salience": number,    // 0.0–1.0, how visually prominent or intentionally presented
       "position": "left" | "center" | "right" | "background",
-      "context": string      // brief description of state/appearance
+      "context": string      // brief description of state/appearance, colored by the genre mood
     }
   ],
   "mood": string,            // e.g. "cozy", "chaotic", "tense", "melancholic"
   "spatialContext": string   // one sentence describing the scene arrangement
 }
 
-Focus on objects with personality potential: furniture, appliances, decorative items, tools.
-Include up to 8 objects. Prioritize salience. Be specific about condition and appearance.`;
+PRIORITY ORDER for object selection:
+1. Any object that appears to be deliberately held up, presented, or placed in the foreground — these are the MOST important even if small (phone, book, mug, toy, bottle, remote, etc.)
+2. Objects occupying the center of frame or closest to the camera
+3. Background furniture and large decor as context
+
+Identify ALL visible objects — small and large, held items, everyday objects, anything recognizable.
+Do NOT restrict to only furniture or appliances.
+Include up to 5 objects max. Order by salience (highest first), where intentionally-presented foreground objects score highest.
+Be specific about condition and appearance.
+${moodInstruction}`;
   }
 
   return `Analyze this camera frame and return a JSON object with this exact shape:
@@ -46,8 +66,11 @@ Include up to 8 objects. Prioritize salience. Be specific about condition and ap
   "spatialContext": string   // describe what activity this environment suggests
 }
 
-Focus on environmental cues that indicate task context: is this a kitchen, study area, laundry room, grocery store?
-Which tasks or missions would naturally happen here?`;
+Identify ALL visible objects — foreground items, held items, and environmental context.
+Prioritize objects being actively held or presented to camera (highest salience).
+Include up to 6 objects max, ordered by salience.
+Focus on what task or mission context the scene and objects suggest.
+Which real-world tasks or missions would naturally happen here?`;
 }
 
 // ---------------------------------------------------------------------------
@@ -80,6 +103,12 @@ Create a character that:
 2. Fits the genre tone perfectly
 3. Has strong comedic or dramatic potential
 4. Is memorable in one sentence
+
+Hard constraints:
+- The character MUST be a personification of THIS exact object ("${objectLabel}"), not a random archetype.
+- Encode object-specific traits in output (material, function, or wear/condition from context).
+- If object is "jacket", character should clearly feel jacket-like (protective, layered, wearable, zipper/button motifs), not generic.
+- Keep the character grounded in the detected object label and context.
 
 Return JSON with this exact shape:
 {

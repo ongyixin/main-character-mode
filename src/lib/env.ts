@@ -7,8 +7,10 @@ export const env = {
   // Gemini 2.0 Flash
   GEMINI_API_KEY: process.env.GEMINI_API_KEY ?? "",
 
-  // Lyria adaptive music
-  LYRIA_API_KEY: process.env.LYRIA_API_KEY ?? "",
+  // Lyria 2 (Vertex AI)
+  LYRIA_PROJECT_ID: process.env.LYRIA_PROJECT_ID ?? "",
+  LYRIA_LOCATION: process.env.LYRIA_LOCATION ?? "us-central1",
+  LYRIA_ACCESS_TOKEN: process.env.LYRIA_ACCESS_TOKEN ?? "",
 
   // NanoBanana visual generation
   NANOBANANA_API_KEY: process.env.NANOBANANA_API_KEY ?? "",
@@ -17,11 +19,18 @@ export const env = {
   // App
   NODE_ENV: process.env.NODE_ENV ?? "development",
   isDev: process.env.NODE_ENV !== "production",
+
+  // Demo flag — NEXT_PUBLIC_ prefix makes it available in the browser bundle.
+  // "true" (default) = mock data only; "false" = live API calls.
+  DEMO_MODE: process.env.NEXT_PUBLIC_DEMO_MODE !== "false",
 } as const;
 
 /** Returns true if a given API is configured */
 export const isApiAvailable = {
   gemini: () => env.GEMINI_API_KEY.length > 0,
-  lyria: () => env.LYRIA_API_KEY.length > 0,
-  nanobanana: () => env.NANOBANANA_API_KEY.length > 0,
+  lyria: () =>
+    env.LYRIA_PROJECT_ID.length > 0 &&
+    env.LYRIA_ACCESS_TOKEN.length > 0,
+  // Image generation works with either the dedicated key or the Gemini key (which has Imagen 3 access)
+  nanobanana: () => env.NANOBANANA_API_KEY.length > 0 || env.GEMINI_API_KEY.length > 0,
 };

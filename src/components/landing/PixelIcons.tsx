@@ -165,6 +165,111 @@ export function SoundOnIcon({ size = 14, color = "currentColor" }: IconProps) {
   );
 }
 
+/** Pixel camera with hollow lens — SCAN step */
+export function CameraIcon({ size = 14, color = "currentColor" }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 8 6"
+      width={size}
+      height={size}
+      shapeRendering="crispEdges"
+      fill={color}
+      style={{ display: "block" }}
+    >
+      {/* Viewfinder bump */}
+      <rect x="3" y="0" width="2" height="1" />
+      {/* Body top */}
+      <rect x="0" y="1" width="8" height="1" />
+      {/* Body sides */}
+      <rect x="0" y="2" width="1" height="3" />
+      <rect x="7" y="2" width="1" height="3" />
+      {/* Lens ring: top, bottom, left, right arcs */}
+      <rect x="2" y="2" width="4" height="1" />
+      <rect x="2" y="4" width="4" height="1" />
+      <rect x="2" y="2" width="1" height="3" />
+      <rect x="5" y="2" width="1" height="3" />
+      {/* Body bottom */}
+      <rect x="0" y="5" width="8" height="1" />
+    </svg>
+  );
+}
+
+/** Pixel theater mask face — STORY MODE / Objects Awaken */
+export function MaskIcon({ size = 14, color = "currentColor" }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 7 7"
+      width={size}
+      height={size}
+      shapeRendering="crispEdges"
+      fill={color}
+      style={{ display: "block" }}
+    >
+      {/* Face outline */}
+      <rect x="1" y="0" width="5" height="1" />
+      <rect x="0" y="1" width="1" height="5" />
+      <rect x="6" y="1" width="1" height="5" />
+      <rect x="1" y="6" width="5" height="1" />
+      {/* Eyes */}
+      <rect x="2" y="2" width="1" height="1" />
+      <rect x="4" y="2" width="1" height="1" />
+      {/* Smile */}
+      <rect x="2" y="4" width="3" height="1" />
+      <rect x="1" y="5" width="1" height="1" />
+      <rect x="5" y="5" width="1" height="1" />
+    </svg>
+  );
+}
+
+/** Pixel sword pointing up — ACTION / Choose step */
+export function SwordIcon({ size = 14, color = "currentColor" }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 5 11"
+      width={size}
+      height={size}
+      shapeRendering="crispEdges"
+      fill={color}
+      style={{ display: "block" }}
+    >
+      {/* Blade */}
+      <rect x="2" y="0" width="1" height="5" />
+      {/* Crossguard */}
+      <rect x="0" y="5" width="5" height="1" />
+      {/* Grip */}
+      <rect x="2" y="6" width="1" height="3" />
+      {/* Pommel */}
+      <rect x="1" y="9" width="3" height="2" />
+    </svg>
+  );
+}
+
+/** Pixel lightning bolt — QUEST MODE / XP */
+export function BoltIcon({ size = 14, color = "currentColor" }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 7 8"
+      width={size}
+      height={size}
+      shapeRendering="crispEdges"
+      fill={color}
+      style={{ display: "block" }}
+    >
+      {/* Upper part of bolt (top-left to center) */}
+      <rect x="1" y="0" width="4" height="1" />
+      <rect x="1" y="1" width="3" height="1" />
+      <rect x="1" y="2" width="2" height="1" />
+      {/* Wide middle bar */}
+      <rect x="1" y="3" width="6" height="1" />
+      {/* Lower part of bolt (center to bottom-right) */}
+      <rect x="3" y="4" width="4" height="1" />
+      <rect x="4" y="5" width="3" height="1" />
+      <rect x="5" y="6" width="2" height="1" />
+      <rect x="6" y="7" width="1" height="1" />
+    </svg>
+  );
+}
+
 /** Pixel speaker with X — SOUND OFF */
 export function SoundOffIcon({ size = 14, color = "currentColor" }: IconProps) {
   return (

@@ -66,9 +66,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${pressStart2P.variable} ${vt323.variable} ${dmMono.variable} ${rajdhani.variable} bg-[#06040e]`}
+        suppressHydrationWarning
       >
         {children}
       </body>

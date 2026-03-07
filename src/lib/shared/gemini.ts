@@ -18,7 +18,11 @@ function getGenAI(): GoogleGenerativeAI {
 }
 
 function getModel() {
-  return getGenAI().getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+  return getGenAI().getGenerativeModel({ model: "gemini-2.5-flash" });
+}
+
+function getFlashLiteModel() {
+  return getGenAI().getGenerativeModel({ model: "gemini-2.0-flash-lite" });
 }
 
 /** Generate structured JSON from a text prompt. Throws on API failure. */
@@ -72,6 +76,24 @@ export async function safeGenerateJSON<T>(prompt: string): Promise<T | null> {
   if (!isApiAvailable.gemini()) return null;
   try {
     return await generateJSON<T>(prompt);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Fast JSON generation using gemini-2.0-flash-lite.
+ * Use for latency-sensitive calls like character dialogue where speed > capability.
+ */
+export async function safeGenerateJSONFast<T>(prompt: string): Promise<T | null> {
+  if (!isApiAvailable.gemini()) return null;
+  try {
+    const model = getFlashLiteModel();
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: { responseMimeType: "application/json" },
+    });
+    return JSON.parse(result.response.text()) as T;
   } catch {
     return null;
   }

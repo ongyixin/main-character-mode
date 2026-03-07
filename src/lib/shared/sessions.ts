@@ -50,7 +50,17 @@ function defaultStoryState(genre: StoryGenre): StoryModeState {
 
 // ─── Store ─────────────────────────────────────────────────────────────────
 
-const store = new Map<string, SessionState>();
+declare global {
+  // eslint-disable-next-line no-var
+  var __HC_SESSION_STORE__: Map<string, SessionState> | undefined;
+}
+
+function getStore(): Map<string, SessionState> {
+  if (!globalThis.__HC_SESSION_STORE__) {
+    globalThis.__HC_SESSION_STORE__ = new Map<string, SessionState>();
+  }
+  return globalThis.__HC_SESSION_STORE__;
+}
 
 /** Create a new session and return it. */
 export function createSession(
@@ -81,18 +91,18 @@ export function createSession(
       },
     }),
   };
-  store.set(id, session);
+  getStore().set(id, session);
   return session;
 }
 
 /** Retrieve a session by ID. */
 export function getSession(id: string): SessionState | undefined {
-  return store.get(id);
+  return getStore().get(id);
 }
 
 /** Replace a session (full update). */
 export function setSession(session: SessionState): void {
-  store.set(session.id, session);
+  getStore().set(session.id, session);
 }
 
 /** Shallow-patch a session; returns the updated session or throws if not found. */
@@ -100,21 +110,21 @@ export function patchSession(
   id: string,
   patch: Partial<SessionState>
 ): SessionState {
-  const existing = store.get(id);
+  const existing = getStore().get(id);
   if (!existing) throw new Error(`Session not found: ${id}`);
   const updated = { ...existing, ...patch };
-  store.set(id, updated);
+  getStore().set(id, updated);
   return updated;
 }
 
 /** Delete a session. */
 export function deleteSession(id: string): void {
-  store.delete(id);
+  getStore().delete(id);
 }
 
 /** List all active sessions (for debugging). */
 export function listSessions(): SessionState[] {
-  return Array.from(store.values());
+  return Array.from(getStore().values());
 }
 
 /** Alias for patchSession — matches the signature expected by music/route.ts */

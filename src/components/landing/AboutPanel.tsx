@@ -35,20 +35,20 @@ export default function AboutPanel() {
         <div
           className="font-pixel px-3 py-2"
           style={{
-            background: "rgba(204,0,0,0.5)",
+            background: "rgba(110,40,90,0.55)",
             borderBottom: "1px solid rgba(255,222,0,0.2)",
             fontSize: 16,
             letterSpacing: "0.18em",
             color: "#FFDE00",
           }}
         >
-          ▸ ABOUT THIS GAME
+          ✿ ABOUT THIS GAME
         </div>
         <div className="px-3 py-3" style={{ background: "rgba(5,2,20,0.95)" }}>
-          <p className="font-vt" style={{ fontSize: 18, color: "rgba(255,255,255,0.55)", lineHeight: 1.55 }}>
+          <p className="font-vt" style={{ fontSize: 18, color: "rgba(255,238,220,0.65)", lineHeight: 1.55 }}>
             Main Character Mode is a real-time AI engine that turns your physical surroundings into a living, procedurally generated game.
           </p>
-          <p className="font-vt" style={{ fontSize: 16, color: "rgba(255,255,255,0.32)", lineHeight: 1.5, marginTop: 8 }}>
+          <p className="font-vt" style={{ fontSize: 16, color: "rgba(240,200,255,0.40)", lineHeight: 1.5, marginTop: 8 }}>
             Point your camera at the world and watch it reframe itself — objects become characters, tasks become missions, and your environment becomes a stage.
           </p>
         </div>
@@ -160,7 +160,7 @@ export default function AboutPanel() {
         style={{
           border: "2px solid rgba(255,222,0,0.2)",
           background: "rgba(5,2,20,0.9)",
-          boxShadow: "3px 3px 0 rgba(204,0,0,0.3)",
+          boxShadow: "3px 3px 0 rgba(168,54,104,0.3)",
         }}
       >
         {CREDITS.map((c, i) => (
@@ -177,7 +177,7 @@ export default function AboutPanel() {
             >
               {c.role}
             </div>
-            <div className="font-vt" style={{ fontSize: 18, color: "rgba(255,255,255,0.55)" }}>
+            <div className="font-vt" style={{ fontSize: 18, color: "rgba(255,238,220,0.62)" }}>
               {c.name}
             </div>
           </div>

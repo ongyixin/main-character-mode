@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import type { StoryGenre } from "@/types";
@@ -14,6 +14,8 @@ import {
   QuickStats,
   TwinklingStars,
   PixelCharacter,
+  MaskIcon,
+  BoltIcon,
 } from "@/components/landing";
 import type { TabId, Settings } from "@/components/landing";
 
@@ -28,25 +30,30 @@ function hexToRgb(hex: string): string {
 
 // ─── Scene data ───────────────────────────────────────────────────────────────
 
-// [x%, bottom%, delay(s), isGreen]
-const FIREFLIES: readonly [number, number, number, boolean][] = [
-  [12, 14, 0, false], [23, 10, 1.5, true], [35, 17, 0.8, false],
-  [48, 12, 2.3, false], [61, 15, 0.3, true], [74, 11, 1.8, false],
-  [87, 16, 1.1, true], [7, 9, 2.8, false],
-  // Extra fireflies for density
-  [16, 13, 0.6, true], [42, 10, 1.9, false], [56, 16, 0.4, true],
-  [71, 12, 2.6, false], [82, 9, 1.2, true],
+// [x%, bottom%, delay(s), type: "gold"|"pink"|"lavender"]
+const FIREFLIES: readonly [number, number, number, "gold" | "pink" | "lavender"][] = [
+  [12, 14, 0, "gold"], [23, 10, 1.5, "pink"], [35, 17, 0.8, "gold"],
+  [48, 12, 2.3, "gold"], [61, 15, 0.3, "lavender"], [74, 11, 1.8, "gold"],
+  [87, 16, 1.1, "pink"], [7, 9, 2.8, "gold"],
+  [16, 13, 0.6, "lavender"], [42, 10, 1.9, "gold"], [56, 16, 0.4, "pink"],
+  [71, 12, 2.6, "gold"], [82, 9, 1.2, "lavender"],
+];
+
+// [x%, y%, delay(s), symbol]
+const SPARKLES: readonly [number, number, number, string][] = [
+  [14, 42, 0, "♡"], [38, 55, 1.3, "✦"], [62, 38, 0.7, "♡"],
+  [80, 58, 2.0, "✦"], [90, 46, 1.5, "♡"], [26, 36, 0.9, "✦"],
 ];
 
 // ─── Genre config ─────────────────────────────────────────────────────────────
 
 const GENRES = [
   { value: "mystery" as StoryGenre, label: "MYSTERY", emoji: "🔍", tagline: "Every object hides a secret", color: "#B0C4FF", borderColor: "#3B4CCA", shadowColor: "rgba(59,76,202,0.6)" },
-  { value: "soap_opera" as StoryGenre, label: "SOAP OPERA", emoji: "🌹", tagline: "Everyone is betrayed. Always.", color: "rgba(255,100,100,0.9)", borderColor: "#CC0000", shadowColor: "rgba(204,0,0,0.6)" },
+  { value: "soap_opera" as StoryGenre, label: "SOAP OPERA", emoji: "🌹", tagline: "Everyone is betrayed. Always.", color: "#E8709A", borderColor: "#A83668", shadowColor: "rgba(168,54,104,0.6)" },
   { value: "workplace_drama" as StoryGenre, label: "WORK DRAMA", emoji: "💼", tagline: "Your lamp is now HR", color: "#FFDE00", borderColor: "#B3A125", shadowColor: "rgba(179,161,37,0.6)" },
-  { value: "dating_sim" as StoryGenre, label: "DATING SIM", emoji: "💘", tagline: "Romance your furniture", color: "rgba(255,100,100,0.9)", borderColor: "#CC0000", shadowColor: "rgba(204,0,0,0.6)" },
+  { value: "dating_sim" as StoryGenre, label: "DATING SIM", emoji: "💘", tagline: "Romance your furniture", color: "#E8709A", borderColor: "#A83668", shadowColor: "rgba(168,54,104,0.6)" },
   { value: "fantasy" as StoryGenre, label: "FANTASY", emoji: "⚔️", tagline: "Ancient power stirs in the mundane", color: "#B0C4FF", borderColor: "#3B4CCA", shadowColor: "rgba(59,76,202,0.6)" },
-  { value: "survival" as StoryGenre, label: "SURVIVAL", emoji: "🪓", tagline: "Trust no one. Esp. the fridge.", color: "rgba(255,100,100,0.9)", borderColor: "#CC0000", shadowColor: "rgba(204,0,0,0.6)" },
+  { value: "survival" as StoryGenre, label: "SURVIVAL", emoji: "🪓", tagline: "Trust no one. Esp. the fridge.", color: "#E8A05A", borderColor: "#A06020", shadowColor: "rgba(160,96,32,0.6)" },
 ];
 
 // ─── Reusable retro UI primitives ─────────────────────────────────────────────
@@ -105,33 +112,45 @@ function PixelCursor({ color = "#FFDE00", active = false }: { color?: string; ac
   return (
     <motion.span
       className="font-pixel inline-block shrink-0"
-      style={{ color, fontSize: 16, minWidth: 12 }}
-      animate={{ opacity: active ? [1, 0.1, 1] : 0, x: active ? 0 : -4 }}
+      style={{ color, fontSize: 14, minWidth: 12 }}
+      animate={
+        active
+          ? { opacity: [1, 0.15, 1], y: [0, -3, 0], x: 0 }
+          : { opacity: 0, y: 0, x: -4 }
+      }
       transition={
         active
-          ? { duration: 0.9, repeat: Infinity, ease: "linear" }
+          ? { duration: 0.85, repeat: Infinity, ease: "easeInOut" }
           : { duration: 0.15 }
       }
     >
-      ▶
+      ♥
     </motion.span>
   );
 }
 
 function PixelDivider({ color = "rgba(255,222,0,0.35)" }: { color?: string }) {
-  const opacities = [0.2, 0.45, 0.8, 0.45, 0.2];
+  const items: [string | null, number][] = [
+    [null, 0.2], [null, 0.45], ["♡", 0.9], [null, 0.45], [null, 0.2],
+  ];
   return (
-    <div style={{ display: "flex", justifyContent: "center", gap: 4, margin: "10px 0" }}>
-      {opacities.map((op, i) => (
-        <div
-          key={i}
-          style={{
-            width: 2,
-            height: 2,
-            background: color.replace(/[\d.]+\)$/, `${op})`),
-          }}
-        />
-      ))}
+    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 5, margin: "10px 0" }}>
+      {items.map(([sym, op], i) =>
+        sym ? (
+          <span
+            key={i}
+            className="font-pixel"
+            style={{ fontSize: 10, color: color.replace(/[\d.]+\)$/, `${op})`), lineHeight: 1 }}
+          >
+            {sym}
+          </span>
+        ) : (
+          <div
+            key={i}
+            style={{ width: 2, height: 2, background: color.replace(/[\d.]+\)$/, `${op})`) }}
+          />
+        )
+      )}
     </div>
   );
 }
@@ -152,12 +171,25 @@ function PixelBackground({ showFog = true }: { showFog?: boolean }) {
         }}
       />
 
-      {/* ── Darkening overlay to keep UI readable ── */}
+      {/* ── Darkening overlay — warm plum tint ── */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(180deg, rgba(2,1,17,0.45) 0%, rgba(2,1,17,0.2) 40%, rgba(2,1,17,0.35) 75%, rgba(2,1,17,0.7) 100%)",
+            "linear-gradient(180deg, rgba(8,2,18,0.48) 0%, rgba(6,2,16,0.22) 40%, rgba(8,2,18,0.38) 75%, rgba(6,2,16,0.72) 100%)",
+        }}
+      />
+
+      {/* ── Soft warm radial bloom in sky center ── */}
+      <div
+        className="absolute"
+        style={{
+          top: "5%",
+          left: "30%",
+          right: "30%",
+          height: "28%",
+          background: "radial-gradient(ellipse, rgba(200,80,150,0.06) 0%, transparent 70%)",
+          pointerEvents: "none",
         }}
       />
 
@@ -189,7 +221,7 @@ function PixelBackground({ showFog = true }: { showFog?: boolean }) {
         }}
       />
 
-      {/* ── Fog / atmosphere layer ── */}
+      {/* ── Fog / atmosphere layer — warm berry tint ── */}
       {showFog && (
         <div
           className="absolute"
@@ -199,30 +231,55 @@ function PixelBackground({ showFog = true }: { showFog?: boolean }) {
             right: "-10%",
             height: "14%",
             background:
-              "linear-gradient(to bottom, transparent 0%, rgba(107,33,168,0.06) 40%, rgba(29,78,216,0.04) 70%, transparent 100%)",
+              "linear-gradient(to bottom, transparent 0%, rgba(160,50,120,0.07) 40%, rgba(80,30,100,0.05) 70%, transparent 100%)",
             animation: "fogDrift 18s ease-in-out infinite",
           }}
         />
       )}
 
-      {/* ── Fireflies ── */}
-      {FIREFLIES.map(([x, bot, delay, isGreen], i) => (
+      {/* ── Fireflies — gold, pink, lavender ── */}
+      {FIREFLIES.map(([x, bot, delay, type], i) => {
+        const colors = {
+          gold: { bg: "rgba(255,215,0,0.9)", glow: "rgba(255,215,0,0.35)" },
+          pink: { bg: "rgba(255,150,200,0.9)", glow: "rgba(255,130,190,0.38)" },
+          lavender: { bg: "rgba(200,170,255,0.85)", glow: "rgba(180,150,255,0.32)" },
+        };
+        const c = colors[type];
+        return (
+          <div
+            key={i}
+            className="absolute"
+            style={{
+              left: `${x}%`,
+              bottom: `${bot}%`,
+              width: 2,
+              height: 2,
+              borderRadius: "50%",
+              background: c.bg,
+              boxShadow: `0 0 5px 2px ${c.glow}`,
+              animation: `fireflyFloat ${4.2 + i * 0.35}s ${delay}s ease-in-out infinite`,
+            }}
+          />
+        );
+      })}
+
+      {/* ── Floating sparkle hearts / stars ── */}
+      {SPARKLES.map(([x, y, delay, sym], i) => (
         <div
-          key={i}
-          className="absolute"
+          key={`spark-${i}`}
+          className="absolute font-pixel"
           style={{
             left: `${x}%`,
-            bottom: `${bot}%`,
-            width: 2,
-            height: 2,
-            borderRadius: "50%",
-            background: isGreen ? "rgba(0,255,127,0.9)" : "rgba(255,215,0,0.9)",
-            boxShadow: isGreen
-              ? "0 0 5px 2px rgba(0,255,127,0.35)"
-              : "0 0 5px 2px rgba(255,215,0,0.35)",
-            animation: `fireflyFloat ${4.2 + i * 0.35}s ${delay}s ease-in-out infinite`,
+            top: `${y}%`,
+            fontSize: 10,
+            color: i % 2 === 0 ? "rgba(255,160,210,0.55)" : "rgba(255,222,0,0.45)",
+            animation: `floatSparkle ${5.5 + i * 0.7}s ${delay}s ease-in-out infinite`,
+            pointerEvents: "none",
+            userSelect: "none",
           }}
-        />
+        >
+          {sym}
+        </div>
       ))}
     </div>
   );
@@ -238,10 +295,10 @@ function TitleCard({ wide = false, onStart }: { wide?: boolean; onStart?: () => 
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ delay: 0.12, duration: 0.7, type: "spring", stiffness: 100 }}
     >
-      {/* Outer yellow border */}
+      {/* Outer gold border */}
       <div style={{ padding: wide ? 3 : 4, background: "#FFDE00", position: "relative" }}>
-        {/* Red inner ring */}
-        <div style={{ padding: wide ? 2 : 3, background: "rgba(204,0,0,0.55)" }}>
+        {/* Plum inner ring */}
+        <div style={{ padding: wide ? 2 : 3, background: "rgba(110,40,90,0.6)" }}>
           {/* Content box */}
           <div
             style={{
@@ -280,15 +337,19 @@ function TitleCard({ wide = false, onStart }: { wide?: boolean; onStart?: () => 
 
             {/* Animated sparkle row */}
             <div style={{ display: "flex", justifyContent: "center", gap: wide ? 16 : 14, marginBottom: wide ? 5 : 18 }}>
-              {(["★", "✦", "★"] as const).map((s, i) => (
+              {([
+                { sym: "✿", color: "rgba(255,160,210,0.9)" },
+                { sym: "♡", color: "#FFDE00" },
+                { sym: "✿", color: "rgba(255,160,210,0.9)" },
+              ] as const).map(({ sym, color }, i) => (
                 <motion.span
                   key={i}
                   className="font-pixel"
-                  style={{ fontSize: wide ? 16 : 14, color: "#FFDE00" }}
-                  animate={{ opacity: [0.3, 1, 0.3], scale: [0.9, 1.1, 0.9] }}
-                  transition={{ duration: 2.4, delay: i * 0.65, repeat: Infinity, ease: "easeInOut" }}
+                  style={{ fontSize: wide ? 16 : 14, color }}
+                  animate={{ opacity: [0.35, 1, 0.35], scale: [0.85, 1.15, 0.85] }}
+                  transition={{ duration: 2.2, delay: i * 0.7, repeat: Infinity, ease: "easeInOut" }}
                 >
-                  {s}
+                  {sym}
                 </motion.span>
               ))}
             </div>
@@ -302,7 +363,7 @@ function TitleCard({ wide = false, onStart }: { wide?: boolean; onStart?: () => 
                   lineHeight: wide ? 1.2 : 2,
                   color: "#FFDE00",
                   letterSpacing: "0.2em",
-                  textShadow: "1px 1px 0 rgba(204,0,0,0.9)",
+                  textShadow: "1px 1px 0 rgba(180,60,120,0.9)",
                 }}
               >
                 MAIN
@@ -316,11 +377,11 @@ function TitleCard({ wide = false, onStart }: { wide?: boolean; onStart?: () => 
                   letterSpacing: "0.16em",
                 }}
                 animate={{
-                  textShadow: [
-                    "0 0 10px rgba(255,222,0,0.3), 2px 2px 0 rgba(30,6,6,0.95)",
-                    "0 0 22px rgba(255,222,0,0.7), 2px 2px 0 rgba(30,6,6,0.95)",
-                    "0 0 10px rgba(255,222,0,0.3), 2px 2px 0 rgba(30,6,6,0.95)",
-                  ],
+                    textShadow: [
+                    "0 0 10px rgba(255,222,0,0.3), 2px 2px 0 rgba(20,4,18,0.95)",
+                    "0 0 22px rgba(255,222,0,0.75), 2px 2px 0 rgba(20,4,18,0.95)",
+                    "0 0 10px rgba(255,222,0,0.3), 2px 2px 0 rgba(20,4,18,0.95)",
+                    ],
                 }}
                 transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
               >
@@ -352,10 +413,10 @@ function TitleCard({ wide = false, onStart }: { wide?: boolean; onStart?: () => 
 
             {/* Tagline */}
             <div style={{ textAlign: "center", paddingTop: wide ? 0 : 6 }}>
-              <p className="font-vt" style={{ fontSize: wide ? 20 : 24, color: "rgba(255,255,255,0.55)", lineHeight: wide ? 1.1 : 1.4 }}>
+              <p className="font-vt" style={{ fontSize: wide ? 20 : 24, color: "rgba(255,238,220,0.68)", lineHeight: wide ? 1.1 : 1.4 }}>
                 Your world is already a game.
               </p>
-              <p className="font-vt" style={{ fontSize: wide ? 17 : 22, color: "rgba(255,255,255,0.33)", marginTop: wide ? 0 : 4 }}>
+              <p className="font-vt" style={{ fontSize: wide ? 17 : 22, color: "rgba(240,200,255,0.44)", marginTop: wide ? 0 : 4 }}>
                 You just haven&apos;t noticed.
               </p>
             </div>
@@ -384,7 +445,7 @@ function TitleCard({ wide = false, onStart }: { wide?: boolean; onStart?: () => 
                     fontSize: 18,
                     letterSpacing: "0.22em",
                     color: "#FFDE00",
-                    textShadow: "2px 2px 0 rgba(204,0,0,0.9), 0 0 24px rgba(255,222,0,0.55)",
+                    textShadow: "2px 2px 0 rgba(180,60,120,0.9), 0 0 28px rgba(255,222,0,0.65)",
                   }}
                 >
                   PRESS START
@@ -402,9 +463,9 @@ function TitleCard({ wide = false, onStart }: { wide?: boolean; onStart?: () => 
                   {[0, 1, 2].map((i) => (
                     <motion.div
                       key={i}
-                      style={{ width: 4, height: 4, background: "rgba(255,222,0,0.4)" }}
-                      animate={{ opacity: [0.2, 0.9, 0.2] }}
-                      transition={{ duration: 1.8, delay: i * 0.3, repeat: Infinity, ease: "easeInOut" }}
+                      style={{ width: 4, height: 4, background: i === 1 ? "rgba(255,160,210,0.55)" : "rgba(255,222,0,0.45)" }}
+                      animate={{ opacity: [0.2, 1, 0.2], scale: [0.85, 1.15, 0.85] }}
+                      transition={{ duration: 1.6, delay: i * 0.28, repeat: Infinity, ease: "easeInOut" }}
                     />
                   ))}
                 </div>
@@ -431,7 +492,7 @@ function ModeOption({
 }: {
   active: boolean;
   onSelect: () => void;
-  icon: string;
+  icon: React.ReactNode;
   label: string;
   tagline: string;
   tooltip: string;
@@ -457,7 +518,7 @@ function ModeOption({
       >
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <PixelCursor color={color} active={active} />
-          <span style={{ fontSize: 20, lineHeight: 1 }}>{icon}</span>
+          <span style={{ display: "flex", alignItems: "center", color }}>{icon}</span>
           <div style={{ flex: 1, minWidth: 0 }}>
             <p
               className="font-pixel"
@@ -465,7 +526,7 @@ function ModeOption({
             >
               {label}
             </p>
-            <p className="font-vt" style={{ fontSize: 16, color: "rgba(255,255,255,0.38)", marginTop: 2 }}>
+            <p className="font-vt" style={{ fontSize: 16, color: "rgba(255,228,240,0.45)", marginTop: 2 }}>
               {tagline}
             </p>
           </div>
@@ -473,13 +534,14 @@ function ModeOption({
             {active && (
               <motion.span
                 key="pip"
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0, scale: 0, rotate: -20 }}
+                animate={{ opacity: 1, scale: [1, 1.2, 1], rotate: 0 }}
                 exit={{ opacity: 0, scale: 0 }}
+                transition={{ duration: 0.3, ease: "backOut" }}
                 className="font-pixel shrink-0"
-                style={{ fontSize: 16, color }}
+                style={{ fontSize: 14, color }}
               >
-                ◆
+                ♥
               </motion.span>
             )}
           </AnimatePresence>
@@ -571,7 +633,14 @@ function GenreCard({
       >
         <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
           {hovered && (
-            <span className="font-pixel" style={{ fontSize: 16, color: genre.color }}>▶</span>
+            <motion.span
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="font-pixel"
+              style={{ fontSize: 12, color: genre.color }}
+            >
+              ♥
+            </motion.span>
           )}
           <span style={{ fontSize: 20 }}>{genre.emoji}</span>
         </div>
@@ -583,7 +652,7 @@ function GenreCard({
         </p>
         <p
           className="font-vt leading-tight mt-1"
-          style={{ fontSize: 16, color: "rgba(255,255,255,0.38)" }}
+          style={{ fontSize: 16, color: "rgba(255,228,240,0.48)" }}
         >
           {genre.tagline}
         </p>
@@ -622,7 +691,7 @@ function PlayTabModeSelect({
         <div
           style={{
             border: "2px solid rgba(255,222,0,0.38)",
-            boxShadow: "4px 4px 0 rgba(204,0,0,0.38)",
+            boxShadow: "4px 4px 0 rgba(168,54,104,0.35)",
             background: "rgba(5,2,20,0.97)",
           }}
         >
@@ -631,31 +700,31 @@ function PlayTabModeSelect({
             className="font-pixel px-4 py-2 flex items-center justify-between"
             style={{
               fontSize: 16,
-              background: "rgba(204,0,0,0.45)",
+              background: "rgba(110,40,90,0.55)",
               borderBottom: "1px solid rgba(255,222,0,0.18)",
               color: "#FFDE00",
               letterSpacing: "0.2em",
             }}
           >
-            <span>▸ SELECT MODE</span>
+            <span>✿ SELECT MODE</span>
             <motion.span
-              animate={{ opacity: [1, 0.1, 1] }}
-              transition={{ duration: 1.4, repeat: Infinity }}
-              style={{ color: "#FFDE00", fontSize: 16 }}
+              animate={{ opacity: [1, 0.1, 1], scale: [1, 1.2, 1] }}
+              transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+              style={{ color: "rgba(255,160,210,0.9)", fontSize: 12 }}
             >
-              ●
+              ♥
             </motion.span>
           </div>
 
           <ModeOption
             active={activeMode === "story"}
             onSelect={() => setActiveMode("story")}
-            icon="🎭"
+            icon={<MaskIcon size={20} />}
             label="STORY MODE"
             tagline="Objects become characters. Drama ensues."
             tooltip="Pick a genre and your surroundings transform into a living narrative. Every object gets a personality, forms relationships, and can issue quests. The AI narrates the drama as it unfolds in real time."
-            color="#CC0000"
-            accent="rgba(204,0,0,0.1)"
+            color="#C84B7A"
+            accent="rgba(200,75,122,0.12)"
           />
 
           <div style={{ height: 1, background: "rgba(255,222,0,0.07)", margin: "0 16px" }} />
@@ -663,7 +732,7 @@ function PlayTabModeSelect({
           <ModeOption
             active={activeMode === "quest"}
             onSelect={() => setActiveMode("quest")}
-            icon="⚡"
+            icon={<BoltIcon size={20} />}
             label="QUEST MODE"
             tagline="Chores become missions. Life has momentum."
             tooltip="Enter real-world tasks and they become tactical missions. Scan your environment to trigger context-aware objectives. Complete them to earn XP, build combo streaks, and level up."
@@ -689,7 +758,7 @@ function PlayTabModeSelect({
           >
             <p
               className="font-vt"
-              style={{ fontSize: 16, color: "rgba(255,255,255,0.38)", lineHeight: 1.5 }}
+              style={{ fontSize: 16, color: "rgba(255,228,240,0.48)", lineHeight: 1.5 }}
             >
               {activeMode === "story"
                 ? "Pick a genre → your room becomes a stage. Every object has a role."
@@ -709,14 +778,14 @@ function PlayTabModeSelect({
           style={{
             fontSize: 16,
             padding: "14px 0",
-            background: activeMode === "story" ? "#CC0000" : "#3B4CCA",
+            background: activeMode === "story" ? "#C84B7A" : "#3B4CCA",
             color: "#FFDE00",
-            border: `2px solid ${activeMode === "story" ? "#990000" : "#1a2880"}`,
-            boxShadow: `4px 4px 0 ${activeMode === "story" ? "rgba(204,0,0,0.7)" : "rgba(59,76,202,0.7)"}`,
+            border: `2px solid ${activeMode === "story" ? "#8B3060" : "#1a2880"}`,
+            boxShadow: `4px 4px 0 ${activeMode === "story" ? "rgba(200,75,122,0.7)" : "rgba(59,76,202,0.7)"}`,
             transition: "background 0.22s, border-color 0.22s, box-shadow 0.22s",
           }}
         >
-          ▶ ENTER {activeMode === "story" ? "STORY" : "QUEST"}
+          {activeMode === "story" ? "♥" : "▶"} ENTER {activeMode === "story" ? "STORY" : "QUEST"}
         </motion.button>
 
         {/* Footer credit */}
@@ -765,14 +834,14 @@ function PlayTabGenreSelect({
         <div
           className="border-2 mb-3"
           style={{
-            borderColor: "#CC0000",
-            boxShadow: "3px 3px 0 rgba(204,0,0,0.5)",
+            borderColor: "#A83668",
+            boxShadow: "3px 3px 0 rgba(168,54,104,0.5)",
           }}
         >
-          <div className="pixel-header-story">▸ SELECT GENRE — STORY MODE</div>
-          <div className="px-4 py-3" style={{ background: "rgba(30,6,6,0.98)" }}>
-            <p className="font-vt" style={{ fontSize: 16, color: "rgba(255,255,255,0.45)" }}>
-              Choose how your objects behave.
+          <div className="pixel-header-story">✿ SELECT GENRE — STORY MODE</div>
+          <div className="px-4 py-3" style={{ background: "rgba(18,4,16,0.98)" }}>
+            <p className="font-vt" style={{ fontSize: 16, color: "rgba(255,228,240,0.52)" }}>
+              Choose how your objects come alive.
             </p>
           </div>
         </div>

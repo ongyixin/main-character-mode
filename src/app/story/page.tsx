@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { StoryHUD } from "@/components/story/StoryHUD";
 import { ObjectLabel } from "@/components/story/ObjectLabel";
 import { InteractionModal } from "@/components/story/InteractionModal";
+import { MusicIndicator } from "@/components/shared/MusicIndicator";
 import NarrationBanner from "@/components/shared/NarrationBanner";
 import { Camera, type CameraHandle } from "@/components/shared/Camera";
 import { MOCK_STORY_SESSION } from "@/lib/mock-data";
@@ -20,6 +21,7 @@ import type {
   ScanResponse,
   TalkRequest,
   TalkResponse,
+  MusicResponse,
 } from "@/types";
 
 /**
@@ -46,6 +48,8 @@ function StoryContent() {
   const [initLoading, setInitLoading] = useState(true);
   const [selectedCharacter, setSelectedCharacter] = useState<ObjectCharacter | null>(null);
   const [scanLoading, setScanLoading] = useState(false);
+  const [musicState, setMusicState] = useState<MusicResponse | null>(null);
+  const [audioEnabled, setAudioEnabled] = useState(false);
   const cameraRef = useRef<CameraHandle>(null);
 
   // ── Session initialization ──────────────────────────────────────────────────
@@ -59,6 +63,13 @@ function StoryContent() {
       };
       setSession(mock);
       setSessionId(mock.id);
+      setMusicState({
+        mood: mock.musicState.mood,
+        intensity: mock.musicState.intensity,
+        trackUrl: mock.musicState.trackUrl ?? null,
+        trackLabel: mock.musicState.trackLabel ?? mock.musicState.mood,
+        isFallback: mock.musicState.isFallback ?? true,
+      });
       setInitLoading(false);
       return;
     }
@@ -76,6 +87,15 @@ function StoryContent() {
         if (!cancelled) {
           setSession(data.initialState);
           setSessionId(data.sessionId);
+          setMusicState({
+            mood: data.initialState.musicState.mood,
+            intensity: data.initialState.musicState.intensity,
+            trackUrl: data.initialState.musicState.trackUrl ?? null,
+            trackLabel:
+              data.initialState.musicState.trackLabel ??
+              data.initialState.musicState.mood,
+            isFallback: data.initialState.musicState.isFallback ?? true,
+          });
         }
       } catch (err) {
         console.error("[Story] Session init failed:", err);
@@ -85,6 +105,49 @@ function StoryContent() {
     })();
     return () => { cancelled = true; };
   }, [genre]);
+
+  const fetchMusic = useCallback(async () => {
+    if (!sessionId || DEMO_MODE) return;
+    try {
+      const res = await fetch(`/api/music?sessionId=${encodeURIComponent(sessionId)}`, {
+        cache: "no-store",
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data: MusicResponse = await res.json();
+      setMusicState(data);
+      setSession((prev) =>
+        prev
+          ? {
+              ...prev,
+              musicState: {
+                ...prev.musicState,
+                mood: data.mood,
+                intensity: data.intensity,
+                trackUrl: data.trackUrl,
+                trackLabel: data.trackLabel,
+                isFallback: data.isFallback,
+                lastUpdatedAt: Date.now(),
+              },
+            }
+          : prev
+      );
+    } catch (err) {
+      console.error("[Story] Music fetch failed:", err);
+    }
+  }, [sessionId]);
+
+  useEffect(() => {
+    if (!sessionId || DEMO_MODE) return;
+    fetchMusic();
+    const id = setInterval(fetchMusic, 20000);
+    return () => clearInterval(id);
+  }, [sessionId, fetchMusic]);
+
+  useEffect(() => {
+    const unlockAudio = () => setAudioEnabled(true);
+    window.addEventListener("pointerdown", unlockAudio, { once: true });
+    return () => window.removeEventListener("pointerdown", unlockAudio);
+  }, []);
 
   // ── Scan handler ────────────────────────────────────────────────────────────
   const handleScan = useCallback(async () => {
@@ -119,12 +182,13 @@ function StoryContent() {
             }
           : prev
       );
+      await fetchMusic();
     } catch (err) {
       console.error("[Story] Scan failed:", err);
     } finally {
       setScanLoading(false);
     }
-  }, [sessionId, scanLoading]);
+  }, [sessionId, scanLoading, fetchMusic]);
 
   // ── Talk handler ────────────────────────────────────────────────────────────
   const handleTalk = useCallback(
@@ -154,13 +218,14 @@ function StoryContent() {
               : prev
           );
         }
+        await fetchMusic();
         return data.response ?? null;
       } catch (err) {
         console.error("[Story] Talk failed:", err);
         return null;
       }
     },
-    [sessionId, selectedCharacter]
+    [sessionId, selectedCharacter, fetchMusic]
   );
 
   // ── Loading state ───────────────────────────────────────────────────────────
@@ -237,7 +302,7 @@ function StoryContent() {
       })}
 
       {/* Layer 3: StoryHUD */}
-      <div className="absolute top-0 left-0 z-[20] safe-top px-3 py-3">
+      <div className="absolute inset-0 z-[20]">
         <StoryHUD
           storyState={storyState}
           sessionStartedAt={session.startedAt}
@@ -245,6 +310,23 @@ function StoryContent() {
           onSelectCharacter={setSelectedCharacter}
           scanLoading={scanLoading}
           selectedCharacterId={selectedCharacter?.id}
+        />
+      </div>
+
+      {/* Music status / player */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 z-[21] safe-top px-3 py-3">
+        <MusicIndicator
+          mode="story"
+          enableAudio={audioEnabled}
+          state={
+            musicState ?? {
+              mood: session.musicState.mood,
+              intensity: session.musicState.intensity,
+              trackUrl: session.musicState.trackUrl ?? null,
+              trackLabel: session.musicState.trackLabel ?? session.musicState.mood,
+              isFallback: session.musicState.isFallback ?? true,
+            }
+          }
         />
       </div>
 

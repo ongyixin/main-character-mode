@@ -18,9 +18,9 @@ function loadStats(): Stats {
 }
 
 const STAT_DEFS = [
-  { key: "sessions" as const, label: "SESSIONS", icon: "▶", color: "#CC0000" },
+  { key: "sessions" as const, label: "SESSIONS", icon: "♥", color: "#C84B7A" },
   { key: "totalXP" as const, label: "TOTAL XP",  icon: "★", color: "#FFDE00" },
-  { key: "bestStreak" as const, label: "STREAK",   icon: "◆", color: "#3B4CCA" },
+  { key: "bestStreak" as const, label: "STREAK",   icon: "✦", color: "#3B4CCA" },
 ];
 
 export default function QuickStats() {
@@ -52,7 +52,7 @@ export default function QuickStats() {
 
           <div
             className="font-pixel"
-            style={{ fontSize: 16, color: "rgba(255,255,255,0.32)", letterSpacing: "0.06em", marginBottom: 4, lineHeight: 1 }}
+            style={{ fontSize: 16, color: "rgba(255,228,240,0.38)", letterSpacing: "0.06em", marginBottom: 4, lineHeight: 1 }}
           >
             {icon} {label}
           </div>

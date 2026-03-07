@@ -136,7 +136,15 @@ export function ObjectLabel({
       >
         {/* Emotion + Name */}
         <div className="flex items-center gap-1.5 mb-0.5">
-          <span className="text-base leading-none">{emoji}</span>
+          {character.portraitUrl ? (
+            <img
+              src={character.portraitUrl}
+              alt={character.name}
+              className="w-5 h-5 rounded-sm object-cover border border-[#FFDE00]/50"
+            />
+          ) : (
+            <span className="text-base leading-none">{emoji}</span>
+          )}
           <span
             className="font-pixel text-base whitespace-nowrap"
             style={{ color: effectiveSelected ? "#FFDE00" : "#FFF0B0" }}

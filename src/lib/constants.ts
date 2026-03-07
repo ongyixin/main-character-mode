@@ -1,17 +1,20 @@
 import type { StoryGenre } from "@/types";
+import { env } from "@/lib/env";
 
 /**
- * Master demo flag.
+ * Master demo flag — driven by NEXT_PUBLIC_DEMO_MODE in .env.local.
  *
- * true  → use fully hardcoded mock data; no API keys required.
- *         The app runs offline and shows a scripted session.
+ * true  (default) → use fully hardcoded mock data; no API keys required.
+ *                   The app runs offline and shows a scripted session.
  *
- * false → remove all hardcoded data. Every game page creates a real
- *         session via /api/session and calls /api/scan, /api/talk,
- *         /api/task, /api/progress, etc. Requires GEMINI_API_KEY
- *         (and optionally LYRIA_API_KEY / NANOBANANA_API_KEY) in .env.local.
+ * false           → remove all hardcoded data. Every game page creates a real
+ *                   session via /api/session and calls /api/scan, /api/talk,
+ *                   /api/task, /api/progress, etc. Requires GEMINI_API_KEY
+ *                   (and optionally LYRIA_ACCESS_TOKEN / NANOBANANA_API_KEY).
+ *
+ * To switch: set NEXT_PUBLIC_DEMO_MODE=false in .env.local and restart the dev server.
  */
-export const DEMO_MODE = true;
+export const DEMO_MODE = env.DEMO_MODE;
 
 export const STORY_GENRES: {
   value: StoryGenre;

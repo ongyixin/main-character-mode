@@ -1,17 +1,17 @@
 "use client";
 
 const MESSAGES = [
-  "▶ NEW: FANTASY MODE UNLOCKED -- ANCIENT POWER STIRS IN THE MUNDANE",
-  "★ VER 1.0 -- YC × GOOGLE DEEPMIND HACKATHON 2026",
-  "◆ TIP: ROAST YOUR FURNITURE FOR MAXIMUM RELATIONSHIP DRAMA",
-  "▶ TIP: QUEST MODE CONVERTS GROCERIES INTO TACTICAL SUPPLY RUNS",
-  "★ WORLD STATUS: OBJECTS ARE WATCHING. RESPOND ACCORDINGLY.",
-  "◆ NEW: SOAP OPERA GENRE NOW FEATURES 400% MORE BETRAYAL",
-  "▶ TIP: 3 QUESTS IN A ROW ACTIVATES YOUR COMBO MULTIPLIER",
-  "★ MYSTERY MODE: EVERY OBJECT IS A SUSPECT. EVEN THE LAMP.",
+  "✿ NEW: FANTASY MODE UNLOCKED -- ANCIENT POWER STIRS IN THE MUNDANE",
+  "♡ VER 1.0 -- YC × GOOGLE DEEPMIND HACKATHON 2026",
+  "✦ TIP: YOUR LAMP HAS FEELINGS. TREAT IT ACCORDINGLY.",
+  "✿ TIP: QUEST MODE CONVERTS GROCERIES INTO TACTICAL SUPPLY RUNS",
+  "♡ WORLD STATUS: OBJECTS ARE WATCHING. AND THEY HAVE OPINIONS.",
+  "✦ NEW: SOAP OPERA GENRE NOW FEATURES 400% MORE BETRAYAL",
+  "✿ TIP: 3 QUESTS IN A ROW ACTIVATES YOUR COMBO MULTIPLIER",
+  "♡ MYSTERY MODE: EVERY OBJECT IS A SUSPECT. EVEN THE LAMP.",
 ];
 
-const TICKER_TEXT = MESSAGES.join("     ◈     ");
+const TICKER_TEXT = MESSAGES.join("     ✿     ");
 
 export default function NewsTicker() {
   return (
@@ -38,16 +38,17 @@ export default function NewsTicker() {
           fontSize: 16,
           color: "#040210",
           background: "#FFDE00",
-          padding: "0 8px",
+          padding: "0 10px",
           letterSpacing: "0.1em",
           height: "100%",
           display: "flex",
           alignItems: "center",
-          borderRight: "2px solid rgba(179,161,37,0.6)",
+          gap: 5,
+          borderRight: "2px solid rgba(200,75,122,0.5)",
           zIndex: 2,
         }}
       >
-        NEWS
+        ✿ NEWS
       </div>
 
       {/* Scrolling track — duplicated for seamless loop */}
@@ -63,7 +64,7 @@ export default function NewsTicker() {
             className="font-pixel"
             style={{
               fontSize: 16,
-              color: "rgba(255,222,0,0.72)",
+              color: "rgba(255,210,230,0.78)",
               letterSpacing: "0.12em",
               lineHeight: 1,
               paddingLeft: 14,
@@ -76,7 +77,7 @@ export default function NewsTicker() {
             className="font-pixel"
             style={{
               fontSize: 16,
-              color: "rgba(255,222,0,0.72)",
+              color: "rgba(255,210,230,0.78)",
               letterSpacing: "0.12em",
               lineHeight: 1,
               paddingLeft: 60,

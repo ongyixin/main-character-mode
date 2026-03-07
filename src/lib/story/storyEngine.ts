@@ -4,7 +4,7 @@
  */
 
 import { v4 as uuid } from "uuid";
-import { safeGenerateJSON } from "@/lib/shared/gemini";
+import { safeGenerateJSON, safeGenerateJSONFast } from "@/lib/shared/gemini";
 import {
   dialoguePrompt,
   questGenerationPrompt,
@@ -214,7 +214,7 @@ export async function processTalk(
     storyState.genre
   );
 
-  const aiResult = await safeGenerateJSON<DialogueResult>(prompt);
+  const aiResult = await safeGenerateJSONFast<DialogueResult>(prompt);
   const result = aiResult ?? getFallbackResponse(character, mode);
 
   const prevScore = character.relationshipToUser;

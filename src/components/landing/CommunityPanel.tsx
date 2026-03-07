@@ -13,7 +13,7 @@ const LOCKED_FEATURES = [
     icon: "🎨",
     label: "SHARE RECAP",
     desc: "Post your generated episode poster to the community feed.",
-    color: "#CC0000",
+    color: "#C84B7A",
   },
   {
     icon: "📡",
@@ -49,14 +49,14 @@ export default function CommunityPanel() {
         <div
           className="font-pixel px-3 py-2"
           style={{
-            background: "rgba(204,0,0,0.5)",
+            background: "rgba(110,40,90,0.55)",
             borderBottom: "1px solid rgba(255,222,0,0.2)",
             fontSize: 16,
             letterSpacing: "0.18em",
             color: "#FFDE00",
           }}
         >
-          ▸ THE GUILD
+          ✿ THE GUILD
         </div>
         <div className="px-3 py-3" style={{ background: "rgba(5,2,20,0.95)" }}>
           <p className="font-vt" style={{ fontSize: 17, color: "rgba(255,255,255,0.45)", lineHeight: 1.5 }}>
@@ -71,8 +71,8 @@ export default function CommunityPanel() {
       {/* Coming soon banner */}
       <div
         style={{
-          border: "2px solid rgba(255,222,0,0.3)",
-          background: "rgba(204,0,0,0.12)",
+        border: "2px solid rgba(255,222,0,0.3)",
+        background: "rgba(120,40,100,0.14)",
           padding: "12px 14px",
           marginBottom: 14,
           display: "flex",

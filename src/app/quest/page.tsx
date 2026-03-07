@@ -7,6 +7,7 @@ import { ActiveMission } from "@/components/quest/ActiveMission";
 import TaskInput from "@/components/quest/TaskInput";
 import { MomentumMeter } from "@/components/quest/MomentumMeter";
 import NarrationBanner from "@/components/shared/NarrationBanner";
+import { MusicIndicator } from "@/components/shared/MusicIndicator";
 import { Camera } from "@/components/shared/Camera";
 import { MOCK_QUEST_SESSION } from "@/lib/mock-data";
 import { DEMO_MODE } from "@/lib/constants";
@@ -18,6 +19,7 @@ import type {
   AddTaskResponse,
   ProgressRequest,
   ProgressResponse,
+  MusicResponse,
 } from "@/types";
 
 type UIPhase = "input" | "briefing" | "active" | "done";
@@ -41,12 +43,23 @@ export default function QuestPage() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [initLoading, setInitLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [musicState, setMusicState] = useState<MusicResponse | null>(null);
+  const [audioEnabled, setAudioEnabled] = useState(false);
 
   // ── Session initialization ──────────────────────────────────────────────────
   useEffect(() => {
     if (DEMO_MODE) {
       setSession(MOCK_QUEST_SESSION);
       setSessionId(MOCK_QUEST_SESSION.id);
+      setMusicState({
+        mood: MOCK_QUEST_SESSION.musicState.mood,
+        intensity: MOCK_QUEST_SESSION.musicState.intensity,
+        trackUrl: MOCK_QUEST_SESSION.musicState.trackUrl ?? null,
+        trackLabel:
+          MOCK_QUEST_SESSION.musicState.trackLabel ??
+          MOCK_QUEST_SESSION.musicState.mood,
+        isFallback: MOCK_QUEST_SESSION.musicState.isFallback ?? true,
+      });
       setInitLoading(false);
       return;
     }
@@ -64,6 +77,15 @@ export default function QuestPage() {
         if (!cancelled) {
           setSession(data.initialState);
           setSessionId(data.sessionId);
+          setMusicState({
+            mood: data.initialState.musicState.mood,
+            intensity: data.initialState.musicState.intensity,
+            trackUrl: data.initialState.musicState.trackUrl ?? null,
+            trackLabel:
+              data.initialState.musicState.trackLabel ??
+              data.initialState.musicState.mood,
+            isFallback: data.initialState.musicState.isFallback ?? true,
+          });
         }
       } catch (err) {
         console.error("[Quest] Session init failed:", err);
@@ -72,6 +94,49 @@ export default function QuestPage() {
       }
     })();
     return () => { cancelled = true; };
+  }, []);
+
+  const fetchMusic = useCallback(async () => {
+    if (!sessionId || DEMO_MODE) return;
+    try {
+      const res = await fetch(`/api/music?sessionId=${encodeURIComponent(sessionId)}`, {
+        cache: "no-store",
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data: MusicResponse = await res.json();
+      setMusicState(data);
+      setSession((prev) =>
+        prev
+          ? {
+              ...prev,
+              musicState: {
+                ...prev.musicState,
+                mood: data.mood,
+                intensity: data.intensity,
+                trackUrl: data.trackUrl,
+                trackLabel: data.trackLabel,
+                isFallback: data.isFallback,
+                lastUpdatedAt: Date.now(),
+              },
+            }
+          : prev
+      );
+    } catch (err) {
+      console.error("[Quest] Music fetch failed:", err);
+    }
+  }, [sessionId]);
+
+  useEffect(() => {
+    if (!sessionId || DEMO_MODE) return;
+    fetchMusic();
+    const id = setInterval(fetchMusic, 20000);
+    return () => clearInterval(id);
+  }, [sessionId, fetchMusic]);
+
+  useEffect(() => {
+    const unlockAudio = () => setAudioEnabled(true);
+    window.addEventListener("pointerdown", unlockAudio, { once: true });
+    return () => window.removeEventListener("pointerdown", unlockAudio);
   }, []);
 
   // ── Derive quest state ──────────────────────────────────────────────────────
@@ -120,13 +185,14 @@ export default function QuestPage() {
             }
           : prev
       );
+      await fetchMusic();
       setPhase("briefing");
     } catch (err) {
       console.error("[Quest] Task submit failed:", err);
     } finally {
       setIsSubmitting(false);
     }
-  }, [sessionId]);
+  }, [sessionId, fetchMusic]);
 
   // ── Accept mission ──────────────────────────────────────────────────────────
   const handleAcceptMission = useCallback(async (missionId: string) => {
@@ -159,11 +225,12 @@ export default function QuestPage() {
             }
           : prev
       );
+      await fetchMusic();
     } catch (err) {
       console.error("[Quest] Accept mission failed:", err);
     }
     setPhase("active");
-  }, [sessionId]);
+  }, [sessionId, fetchMusic]);
 
   // ── Skip mission ────────────────────────────────────────────────────────────
   const handleSkipMission = useCallback((missionId: string) => {
@@ -202,11 +269,12 @@ export default function QuestPage() {
             }
           : prev
       );
+      await fetchMusic();
     } catch (err) {
       console.error("[Quest] Complete mission failed:", err);
     }
     setPhase("done");
-  }, [sessionId]);
+  }, [sessionId, fetchMusic]);
 
   // ── Abandon mission ─────────────────────────────────────────────────────────
   const handleAbandon = useCallback(async (missionId: string) => {
@@ -239,11 +307,12 @@ export default function QuestPage() {
             }
           : prev
       );
+      await fetchMusic();
     } catch (err) {
       console.error("[Quest] Abandon mission failed:", err);
     }
     setPhase("input");
-  }, [sessionId]);
+  }, [sessionId, fetchMusic]);
 
   // ── Loading state ───────────────────────────────────────────────────────────
   if (initLoading || !session || !questState) {
@@ -302,6 +371,23 @@ export default function QuestPage() {
           progression={session.progression}
           questState={questState}
           startedAt={session.startedAt}
+        />
+      </div>
+
+      {/* Adaptive music indicator */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 z-[21] safe-top px-3 py-3">
+        <MusicIndicator
+          mode="quest"
+          enableAudio={audioEnabled}
+          state={
+            musicState ?? {
+              mood: session.musicState.mood,
+              intensity: session.musicState.intensity,
+              trackUrl: session.musicState.trackUrl ?? null,
+              trackLabel: session.musicState.trackLabel ?? session.musicState.mood,
+              isFallback: session.musicState.isFallback ?? true,
+            }
+          }
         />
       </div>
 

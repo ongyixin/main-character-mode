@@ -1,11 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
+import type { ReactNode } from "react";
+import { CameraIcon, MaskIcon, SwordIcon, BoltIcon } from "./PixelIcons";
 
-const STEPS = [
+const STEPS: { num: string; icon: ReactNode; title: string; desc: string; tip: string; color: string }[] = [
   {
     num: "01",
-    icon: "📷",
+    icon: <CameraIcon size={16} />,
     title: "SCAN YOUR WORLD",
     desc: "Point your camera at any room, space, or environment. Objects and surfaces become the raw material for your game.",
     tip: "Works indoors & outdoors",
@@ -13,15 +15,15 @@ const STEPS = [
   },
   {
     num: "02",
-    icon: "🎭",
+    icon: <MaskIcon size={16} />,
     title: "OBJECTS AWAKEN",
     desc: "AI identifies objects and transforms them into characters with personalities, voices, and agendas. Your lamp has feelings now.",
     tip: "Every object is uniquely generated",
-    color: "#CC0000",
+    color: "#C84B7A",
   },
   {
     num: "03",
-    icon: "⚔",
+    icon: <SwordIcon size={16} />,
     title: "CHOOSE YOUR ACTION",
     desc: "Story Mode: flirt, interrogate, roast or befriend objects. Quest Mode: receive cinematic missions based on your real-world tasks.",
     tip: "6 interaction modes in Story",
@@ -29,7 +31,7 @@ const STEPS = [
   },
   {
     num: "04",
-    icon: "⚡",
+    icon: <BoltIcon size={16} />,
     title: "EARN XP & PROGRESS",
     desc: "Complete quests, maintain streaks, and build momentum. An adaptive AI soundtrack reacts to your gameplay in real time.",
     tip: "Shared XP across both modes",
@@ -44,9 +46,9 @@ const CONTROLS = [
   { key: "SCAN",  desc: "Analyse current environment" },
 ];
 
-const MODES = [
-  { icon: "🎭", name: "STORY MODE",  desc: "Objects become characters. Drama ensues.", color: "#CC0000" },
-  { icon: "⚡", name: "QUEST MODE",  desc: "Chores become missions. Life has momentum.", color: "#3B4CCA" },
+const MODES: { icon: ReactNode; name: string; desc: string; color: string }[] = [
+  { icon: <MaskIcon size={18} />, name: "STORY MODE",  desc: "Objects become characters. Drama ensues.", color: "#C84B7A" },
+  { icon: <BoltIcon size={18} />, name: "QUEST MODE",  desc: "Chores become missions. Life has momentum.", color: "#3B4CCA" },
 ];
 
 export default function HowToPlay() {
@@ -69,17 +71,17 @@ export default function HowToPlay() {
         <div
           className="font-pixel px-3 py-2"
           style={{
-            background: "rgba(204,0,0,0.5)",
+            background: "rgba(110,40,90,0.55)",
             borderBottom: "1px solid rgba(255,222,0,0.2)",
             fontSize: 16,
             letterSpacing: "0.18em",
             color: "#FFDE00",
           }}
         >
-          ▸ HOW TO PLAY
+          ✿ HOW TO PLAY
         </div>
         <div className="px-3 py-2" style={{ background: "rgba(5,2,20,0.95)" }}>
-          <p className="font-vt" style={{ fontSize: 17, color: "rgba(255,255,255,0.45)", lineHeight: 1.5 }}>
+          <p className="font-vt" style={{ fontSize: 17, color: "rgba(255,238,220,0.58)", lineHeight: 1.5 }}>
             Turn your real world into a living game.
           </p>
         </div>
@@ -98,7 +100,7 @@ export default function HowToPlay() {
               boxShadow: `3px 3px 0 ${mode.color}22`,
             }}
           >
-            <div style={{ fontSize: 18, marginBottom: 5 }}>{mode.icon}</div>
+            <div style={{ display: "flex", alignItems: "center", marginBottom: 5, color: mode.color }}>{mode.icon}</div>
             <div
               className="font-pixel"
               style={{ fontSize: 16, color: mode.color, letterSpacing: "0.1em", marginBottom: 5, lineHeight: 1.6 }}
@@ -154,7 +156,7 @@ export default function HowToPlay() {
 
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                <span style={{ fontSize: 16 }}>{step.icon}</span>
+                <span style={{ display: "flex", alignItems: "center", color: step.color }}>{step.icon}</span>
                 <span
                   className="font-pixel"
                   style={{ fontSize: 16, color: step.color, letterSpacing: "0.12em", lineHeight: 1.7 }}
@@ -195,7 +197,7 @@ export default function HowToPlay() {
         style={{
           border: "2px solid rgba(255,222,0,0.2)",
           background: "rgba(5,2,20,0.9)",
-          boxShadow: "3px 3px 0 rgba(204,0,0,0.3)",
+          boxShadow: "3px 3px 0 rgba(168,54,104,0.3)",
         }}
       >
         {CONTROLS.map((ctrl, i) => (
