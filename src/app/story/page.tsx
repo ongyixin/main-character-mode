@@ -15,23 +15,20 @@ import type {
 } from "@/types";
 
 /**
- * Story Mode page shell.
+ * Story Mode page shell — pixel-retro AR RPG overlay.
  *
  * Layer stack (bottom → top):
  *   0. Camera feed (full-screen background)
- *   1. Atmosphere gradient overlay
- *   2. Floating ObjectLabels (per character in storyState.characters)
- *   3. StoryHUD (top-left)
- *   4. NarrationBanner (bottom)
- *   5. InteractionModal (conditional)
- *
- * Story Agent replaces mock session with live state from /api/session and /api/scan.
+ *   1. Dark tint + pixel grid overlay
+ *   2. Floating ObjectLabels (per character — retro NPC tags)
+ *   3. StoryHUD (bottom)
+ *   4. NarrationBanner (top)
+ *   5. InteractionModal (conditional — RPG dialogue box)
  */
 function StoryContent() {
   const searchParams = useSearchParams();
   const genre = (searchParams.get("genre") ?? "mystery") as StoryGenre;
 
-  // ── State (Story Agent replaces with real API state) ─────────────────────
   const [session] = useState({
     ...MOCK_STORY_SESSION,
     storyState: MOCK_STORY_SESSION.storyState
@@ -47,14 +44,12 @@ function StoryContent() {
   const latestNarration = sessionState.narrativeLog[sessionState.narrativeLog.length - 1] ?? null;
 
   const handleScan = useCallback(() => {
-    // Story Agent: trigger Camera scan → POST /api/scan
     setScanLoading(true);
     setTimeout(() => setScanLoading(false), 2000);
   }, []);
 
   const handleTalk = useCallback(
     async (mode: InteractionMode, message: string) => {
-      // Story Agent: POST /api/talk with { sessionId, characterId, interactionMode, message }
       console.log("[Story] talk:", selectedCharacter?.id, mode, message);
       return null;
     },
@@ -62,20 +57,30 @@ function StoryContent() {
   );
 
   return (
-    <div className="relative h-full w-full overflow-hidden" style={{ background: "var(--story-bg)" }}>
-      {/* Layer 0: Camera feed — renders full-screen via absolute positioning */}
+    <div
+      className="relative h-full w-full overflow-hidden"
+      style={{ background: "var(--story-bg)" }}
+    >
+      {/* Layer 0: Camera feed */}
       <div className="absolute inset-0 z-0">
-        <Camera className="w-full h-full object-cover opacity-40" mode="story" />
+        <Camera className="w-full h-full object-cover opacity-35" mode="story" />
       </div>
 
-      {/* Layer 1: Atmosphere overlay */}
+      {/* Layer 1: Dark atmosphere + pixel grid */}
       <div
         className="absolute inset-0 pointer-events-none z-[1]"
         style={{
           background:
-            "radial-gradient(ellipse at 30% 20%, rgba(123,63,196,0.25) 0%, transparent 50%), " +
-            "radial-gradient(ellipse at 70% 80%, rgba(200,155,60,0.15) 0%, transparent 50%), " +
-            "linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 40%, rgba(0,0,0,0.6) 100%)",
+            "radial-gradient(ellipse at 30% 25%, rgba(204,0,0,0.22) 0%, transparent 50%), " +
+            "linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 35%, rgba(0,0,0,0.65) 100%)",
+        }}
+      />
+      {/* Scanlines */}
+      <div
+        className="absolute inset-0 pointer-events-none z-[2]"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.07) 3px, rgba(0,0,0,0.07) 4px)",
         }}
       />
 
@@ -95,7 +100,7 @@ function StoryContent() {
       })}
 
       {/* Layer 3: StoryHUD */}
-      <div className="absolute top-0 left-0 z-[20] safe-top px-4 py-3">
+      <div className="absolute top-0 left-0 z-[20] safe-top px-3 py-3">
         <StoryHUD
           storyState={storyState}
           sessionStartedAt={sessionState.startedAt}
@@ -106,19 +111,27 @@ function StoryContent() {
         />
       </div>
 
-      {/* Back button */}
-      <div className="absolute top-0 right-0 z-[20] safe-top px-4 py-3">
+      {/* Exit button */}
+      <div className="absolute top-0 right-0 z-[20] safe-top px-3 py-3">
         <a
           href="/"
-          className="glass-story rounded-xl px-3 py-2 font-display text-[#c89b3c]/70 text-xs touch-target block"
+          className="flex items-center touch-target"
+          style={{
+            background: "rgba(30,6,6,0.92)",
+            border: "2px solid #CC0000",
+            padding: "6px 12px",
+            boxShadow: "2px 2px 0 rgba(204,0,0,0.5)",
+          }}
         >
-          ← Exit
+          <span className="font-pixel text-base" style={{ color: "rgba(255,222,0,0.7)" }}>
+            ← EXIT
+          </span>
         </a>
       </div>
 
       {/* Layer 4: Narration banner */}
-      <div className="absolute bottom-0 left-0 right-0 z-[30] safe-bottom pb-4">
-        <NarrationBanner event={latestNarration} autoDismissMs={8000} />
+      <div className="absolute top-0 left-0 right-0 z-[30] safe-top pt-16 px-3">
+        <NarrationBanner event={latestNarration} mode="story" autoDismissMs={8000} />
       </div>
 
       {/* Layer 5: Interaction modal */}
@@ -130,19 +143,27 @@ function StoryContent() {
         />
       )}
 
-      {/* Scan corners */}
-      <ScanCorners />
+      {/* Pixel corner brackets */}
+      <PixelCorners color="rgba(255,222,0,0.4)" />
     </div>
   );
 }
 
-function ScanCorners() {
+function PixelCorners({ color }: { color: string }) {
   return (
-    <div className="absolute inset-4 pointer-events-none z-[5]" aria-hidden>
-      <div className="absolute top-0 left-0 w-6 h-6 border-t border-l border-[#c89b3c]/30 rounded-tl-lg" />
-      <div className="absolute top-0 right-0 w-6 h-6 border-t border-r border-[#c89b3c]/30 rounded-tr-lg" />
-      <div className="absolute bottom-0 left-0 w-6 h-6 border-b border-l border-[#c89b3c]/30 rounded-bl-lg" />
-      <div className="absolute bottom-0 right-0 w-6 h-6 border-b border-r border-[#c89b3c]/30 rounded-br-lg" />
+    <div className="absolute inset-3 pointer-events-none z-[5]" aria-hidden>
+      {/* Top-left */}
+      <div className="absolute top-0 left-0 w-5 h-5" style={{ borderTop: `2px solid ${color}`, borderLeft: `2px solid ${color}` }} />
+      <div className="absolute top-0 left-0 w-2 h-2" style={{ background: color, opacity: 0.4, borderRadius: 0 }} />
+      {/* Top-right */}
+      <div className="absolute top-0 right-0 w-5 h-5" style={{ borderTop: `2px solid ${color}`, borderRight: `2px solid ${color}` }} />
+      <div className="absolute top-0 right-0 w-2 h-2" style={{ background: color, opacity: 0.4 }} />
+      {/* Bottom-left */}
+      <div className="absolute bottom-0 left-0 w-5 h-5" style={{ borderBottom: `2px solid ${color}`, borderLeft: `2px solid ${color}` }} />
+      <div className="absolute bottom-0 left-0 w-2 h-2" style={{ background: color, opacity: 0.4 }} />
+      {/* Bottom-right */}
+      <div className="absolute bottom-0 right-0 w-5 h-5" style={{ borderBottom: `2px solid ${color}`, borderRight: `2px solid ${color}` }} />
+      <div className="absolute bottom-0 right-0 w-2 h-2" style={{ background: color, opacity: 0.4 }} />
     </div>
   );
 }
@@ -155,8 +176,13 @@ export default function StoryPage() {
           className="relative h-full w-full flex items-center justify-center"
           style={{ background: "var(--story-bg)" }}
         >
-          <div className="text-white/40 text-sm tracking-widest uppercase font-display animate-pulse">
-            Loading…
+          <div
+            className="border-2 px-8 py-6 text-center"
+            style={{ borderColor: "#CC0000", boxShadow: "4px 4px 0 rgba(204,0,0,0.5)", background: "rgba(30,6,6,0.95)" }}
+          >
+            <p className="font-pixel text-base animate-pulse2" style={{ color: "#FFDE00" }}>
+              LOADING...
+            </p>
           </div>
         </div>
       }

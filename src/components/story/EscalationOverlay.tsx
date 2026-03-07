@@ -87,7 +87,7 @@ export function EscalationOverlay({
           transition={{ type: "spring", delay: 0.1, stiffness: 300 }}
           className="px-4 py-2 rounded-full glass border border-white/20"
         >
-          <span className={cn("font-mono-dm text-xs tracking-widest uppercase font-bold", style.accent)}>
+          <span className={cn("font-mono-dm text-base tracking-wider uppercase font-bold", style.accent)}>
             {escalationBannerTitle(event.type)}
           </span>
         </motion.div>
@@ -107,7 +107,7 @@ export function EscalationOverlay({
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.35 }}
-          className="font-body text-white/80 text-sm italic leading-relaxed"
+          className="font-body text-white/80 text-xl italic leading-relaxed"
         >
           "{event.narrativeText}"
         </motion.p>
@@ -125,8 +125,8 @@ export function EscalationOverlay({
                 key={c.id}
                 className="px-3 py-1.5 rounded-xl glass border border-white/20 text-center"
               >
-                <p className="font-display text-[#f0d898] text-xs font-semibold">{c.name}</p>
-                <p className="font-body text-white/40 text-[9px]">{c.emotionalState}</p>
+                <p className="font-display text-[#f0d898] text-base font-semibold">{c.name}</p>
+                <p className="font-body text-white/40 text-sm">{c.emotionalState}</p>
               </div>
             ))}
           </motion.div>
@@ -137,7 +137,7 @@ export function EscalationOverlay({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
-          className="font-mono-dm text-white/30 text-[10px] tracking-widest uppercase mt-2"
+          className="font-mono-dm text-white/30 text-sm tracking-wider uppercase mt-2"
         >
           Tap anywhere to continue
         </motion.p>

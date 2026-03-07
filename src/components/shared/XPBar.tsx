@@ -1,6 +1,4 @@
 "use client";
-// XP and level display — shared by both modes
-// OWNER: Shared / Frontend Agent
 
 import type { ProgressionState } from "@/types";
 import { LEVEL_THRESHOLDS } from "@/lib/constants";
@@ -14,22 +12,44 @@ function xpProgressInLevel(state: ProgressionState): number {
 interface XPBarProps {
   progression: ProgressionState;
   className?: string;
+  mode?: "story" | "quest";
 }
 
+const SEGMENTS = 10;
+
 export { XPBar };
-export default function XPBar({ progression, className = "" }: XPBarProps) {
+export default function XPBar({ progression, className = "", mode = "quest" }: XPBarProps) {
   const progress = xpProgressInLevel(progression);
+  const filledSegs = Math.round(Math.min(1, progress) * SEGMENTS);
+  const isStory = mode === "story";
+  const color = isStory ? "#FFDE00" : "#FFDE00";
+  const borderColor = isStory ? "rgba(255,222,0,0.4)" : "rgba(255,222,0,0.4)";
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <span className="text-xs font-mono text-white/60">LV {progression.level}</span>
-      <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
-        <div
-          className="h-full bg-white/70 rounded-full transition-all duration-700"
-          style={{ width: `${Math.min(100, progress * 100)}%` }}
-        />
+      {/* Level */}
+      <span className="font-pixel text-base shrink-0" style={{ color }}>
+        LV{progression.level}
+      </span>
+
+      {/* Segmented bar */}
+      <div className="flex-1 flex gap-[2px]">
+        {Array.from({ length: SEGMENTS }).map((_, i) => (
+          <div
+            key={i}
+            className="flex-1 h-2.5 transition-all duration-500"
+            style={{
+              border: `1px solid ${i < filledSegs ? color : borderColor}`,
+              background: i < filledSegs ? color : "transparent",
+            }}
+          />
+        ))}
       </div>
-      <span className="text-xs font-mono text-white/40">{progression.xp} XP</span>
+
+      {/* XP number */}
+      <span className="font-pixel text-base shrink-0 tabular-nums" style={{ color: isStory ? "rgba(255,222,0,0.5)" : "rgba(255,222,0,0.5)" }}>
+        {progression.xp}XP
+      </span>
     </div>
   );
 }

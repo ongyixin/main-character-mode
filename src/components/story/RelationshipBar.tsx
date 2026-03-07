@@ -1,34 +1,40 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { motion, useAnimation } from "framer-motion";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/cn";
 import { relationshipLabel, relationshipColor } from "@/lib/story/relationships";
 
 interface RelationshipBarProps {
   score: number;        // -100 to 100
-  delta?: number;       // recent change (to animate)
+  delta?: number;
   characterName?: string;
   className?: string;
   compact?: boolean;
 }
 
-function scoreToPercent(score: number): number {
-  // Map -100..100 to 0..100 for display
-  return (score + 100) / 2;
+function scoreToSegments(score: number, total: number): number {
+  // Map -100..100 to 0..total segments
+  return Math.round(((score + 100) / 200) * total);
 }
 
-function scoreToBarColor(score: number): string {
-  if (score >= 60) return "from-rose-500 to-pink-400";
-  if (score >= 30) return "from-amber-500 to-yellow-400";
-  if (score >= -30) return "from-gray-500 to-gray-400";
-  if (score >= -60) return "from-orange-600 to-orange-400";
-  return "from-red-700 to-red-500";
+function scoreToColor(score: number): string {
+  if (score >= 60) return "#FFDE00";
+  if (score >= 30) return "#FFDE00";
+  if (score >= -30) return "rgba(255,255,255,0.5)";
+  if (score >= -60) return "#CC0000";
+  return "#FF0000";
+}
+
+function scoreToLabel(score: number): string {
+  if (score >= 60) return "DEVOTED";
+  if (score >= 30) return "FRIENDLY";
+  if (score >= -30) return "NEUTRAL";
+  if (score >= -60) return "HOSTILE";
+  return "ENEMY";
 }
 
 function deltaLabel(delta: number): string {
-  if (delta > 0) return `+${delta}`;
-  return `${delta}`;
+  return delta > 0 ? `+${delta}` : `${delta}`;
 }
 
 export function RelationshipBar({
@@ -38,32 +44,30 @@ export function RelationshipBar({
   className,
   compact = false,
 }: RelationshipBarProps) {
-  const barPercent = scoreToPercent(score);
-  const barColor = scoreToBarColor(score);
-  const label = relationshipLabel(score);
-  const labelColor = relationshipColor(score);
+  const TOTAL_SEGMENTS = compact ? 12 : 16;
+  const filledSegs = scoreToSegments(score, TOTAL_SEGMENTS);
+  const color = scoreToColor(score);
+  const label = scoreToLabel(score);
 
   return (
     <div className={cn("flex flex-col gap-1", className)}>
       {!compact && (
         <div className="flex items-center justify-between">
-          <span className="font-body text-white/60 text-xs">
-            {characterName ? `${characterName}'s feelings` : "Relationship"}
+          <span className="font-pixel text-base tracking-wide" style={{ color: "rgba(255,255,255,0.4)" }}>
+            {characterName ? `${characterName.toUpperCase()} AFFECTION` : "RELATIONSHIP"}
           </span>
-          <div className="flex items-center gap-1.5">
-            <span className={cn("font-mono-dm text-xs font-semibold", labelColor)}>
+          <div className="flex items-center gap-2">
+            <span className="font-pixel text-base" style={{ color }}>
               {label}
             </span>
             {delta !== undefined && delta !== 0 && (
               <motion.span
                 key={delta}
-                initial={{ opacity: 0, y: -6 }}
+                initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className={cn(
-                  "font-mono-dm text-xs font-bold",
-                  delta > 0 ? "text-emerald-400" : "text-red-400"
-                )}
+                className="font-pixel text-base font-bold"
+                style={{ color: delta > 0 ? "#FFDE00" : "#FF0000" }}
               >
                 {deltaLabel(delta)}
               </motion.span>
@@ -72,29 +76,36 @@ export function RelationshipBar({
         </div>
       )}
 
-      {/* Track */}
-      <div className="relative h-2 rounded-full bg-white/10 overflow-hidden">
-        {/* Neutral midpoint marker */}
-        <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/20 z-10" />
-
-        {/* Bar fill */}
-        <motion.div
-          className={cn("absolute top-0 bottom-0 left-0 rounded-full bg-gradient-to-r", barColor)}
-          initial={false}
-          animate={{ width: `${barPercent}%` }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-        />
+      {/* Segmented bar */}
+      <div className="flex gap-[2px] items-center">
+        {Array.from({ length: TOTAL_SEGMENTS }).map((_, i) => {
+          const filled = i < filledSegs;
+          const isMidpoint = i === Math.floor(TOTAL_SEGMENTS / 2) - 1;
+          return (
+            <div
+              key={i}
+              className={cn("transition-all duration-300", compact ? "h-2" : "h-3")}
+              style={{
+                width: compact ? 8 : 10,
+                border: `1px solid ${filled ? color : "rgba(255,255,255,0.15)"}`,
+                background: filled ? color : "transparent",
+                boxShadow: filled && i === filledSegs - 1 ? `0 0 4px ${color}` : "none",
+                marginRight: isMidpoint ? 3 : 0,
+              }}
+            />
+          );
+        })}
       </div>
 
       {compact && (
         <div className="flex items-center justify-between">
-          <span className={cn("font-mono-dm text-[9px]", labelColor)}>{label}</span>
+          <span className="font-pixel text-base" style={{ color }}>
+            {label}
+          </span>
           {delta !== undefined && delta !== 0 && (
             <span
-              className={cn(
-                "font-mono-dm text-[9px] font-bold",
-                delta > 0 ? "text-emerald-400" : "text-red-400"
-              )}
+              className="font-pixel text-base font-bold"
+              style={{ color: delta > 0 ? "#FFDE00" : "#FF0000" }}
             >
               {deltaLabel(delta)}
             </span>

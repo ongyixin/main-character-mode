@@ -10,33 +10,37 @@ interface QuestHUDProps {
   questState: QuestModeState;
   startedAt?: number;
   className?: string;
-  // Extended props from quest/page.tsx
   scanState?: string;
   onScanRetry?: () => void;
   onRecap?: () => void;
 }
 
-/**
- * Quest Mode heads-up display — mission-control readout.
- * Top overlay showing XP, streak, pending count, and elapsed time.
- */
-export function QuestHUD({ progression, questState, startedAt = Date.now(), className, scanState: _scanState, onScanRetry: _onScanRetry, onRecap: _onRecap }: QuestHUDProps) {
+export function QuestHUD({ progression, questState, startedAt = Date.now(), className }: QuestHUDProps) {
   const pending = questState.missions.filter((m) => m.status === "briefed").length;
 
   return (
     <div
-      className={cn(
-        "glass-quest border-glow-quest pointer-events-none",
-        "px-4 py-3 rounded min-w-[200px]",
-        className
-      )}
+      className={cn("pointer-events-none", className)}
+      style={{
+        background: "rgba(6,8,30,0.95)",
+        border: "2px solid #3B4CCA",
+        boxShadow: "3px 3px 0 rgba(59,76,202,0.5)",
+        padding: "8px 12px",
+        minWidth: 200,
+      }}
     >
-      {/* Status row */}
-      <div className="flex items-center justify-between mb-2">
-        <span className="font-mono-dm text-[#00d4ff]/60 text-[9px] tracking-[0.25em] uppercase">
-          ◉ FIELD OPS
-        </span>
-        <span className="font-mono-dm text-white/30 text-[10px] tabular-nums">
+      {/* Window chrome title */}
+      <div
+        className="flex items-center justify-between mb-2 pb-1.5"
+        style={{ borderBottom: "1px solid rgba(255,222,0,0.15)" }}
+      >
+        <div className="flex items-center gap-1.5">
+          <div className="w-2 h-2 inline-block animate-pulse2" style={{ background: "#FFDE00" }} />
+          <span className="font-pixel text-base tracking-wider" style={{ color: "rgba(255,222,0,0.6)" }}>
+            ◉ FIELD OPS
+          </span>
+        </div>
+        <span className="font-mono-dm text-base tabular-nums" style={{ color: "rgba(255,255,255,0.25)" }}>
           T+{formatDuration(startedAt)}
         </span>
       </div>
@@ -44,15 +48,18 @@ export function QuestHUD({ progression, questState, startedAt = Date.now(), clas
       {/* XP bar */}
       <XPBar progression={progression} className="mb-2" />
 
-      {/* Bottom row */}
+      {/* Stats row */}
       <div className="flex items-center gap-3">
         {progression.currentStreak > 0 && (
-          <span className="font-mono-dm text-[#00d4ff] text-[10px]">
-            🔥 ×{progression.currentStreak}
-          </span>
+          <div className="flex items-center gap-1">
+            <span className="text-base">🔥</span>
+            <span className="font-pixel text-base" style={{ color: "#FFDE00" }}>
+              ×{progression.currentStreak}
+            </span>
+          </div>
         )}
-        <span className="font-mono-dm text-white/40 text-[10px]">
-          {pending} objective{pending !== 1 ? "s" : ""} queued
+        <span className="font-pixel text-base" style={{ color: "rgba(255,255,255,0.3)" }}>
+          {pending} OBJ QUEUED
         </span>
       </div>
     </div>

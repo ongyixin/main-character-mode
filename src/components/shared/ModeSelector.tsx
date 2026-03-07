@@ -35,8 +35,8 @@ export function ModeSelector({ className }: ModeSelectorProps) {
           icon="🎭"
           title="Story Mode"
           tagline="Your world has feelings"
-          accentClass="border-[#7b3fc4]/50 bg-[#7b3fc4]/10"
-          activeClass="border-[#c89b3c] bg-gradient-to-br from-[#7b3fc4]/20 to-[#c89b3c]/10 border-glow-story"
+          accentClass="border-[#CC0000]/50 bg-[#CC0000]/10"
+          activeClass="border-[#FFDE00] bg-gradient-to-br from-[#CC0000]/20 to-[#FFDE00]/10 border-glow-story"
         />
         <ModeCard
           selected={selectedMode === "quest"}
@@ -44,15 +44,15 @@ export function ModeSelector({ className }: ModeSelectorProps) {
           icon="⚡"
           title="Quest Mode"
           tagline="Your life has missions"
-          accentClass="border-[#0066aa]/50 bg-[#0066aa]/10"
-          activeClass="border-[#00d4ff] bg-gradient-to-br from-[#0066aa]/20 to-[#00d4ff]/10 border-glow-quest"
+          accentClass="border-[#3B4CCA]/50 bg-[#3B4CCA]/10"
+          activeClass="border-[#FFDE00] bg-gradient-to-br from-[#3B4CCA]/20 to-[#FFDE00]/10 border-glow-quest"
         />
       </div>
 
       {/* Genre picker (story only) */}
       {selectedMode === "story" && (
         <div className="animate-fade-up">
-          <p className="font-body text-white/50 text-xs tracking-widest uppercase mb-3 px-1">
+          <p className="font-body text-white/50 text-base tracking-wider uppercase mb-3 px-1">
             Choose your genre
           </p>
           <div className="grid grid-cols-3 gap-2">
@@ -68,7 +68,7 @@ export function ModeSelector({ className }: ModeSelectorProps) {
                 )}
               >
                 <span className="text-xl">{g.emoji}</span>
-                <span className="font-body text-[10px] font-medium tracking-wide text-center leading-tight">
+                <span className="font-body text-sm font-medium tracking-wide text-center leading-tight">
                   {g.label}
                 </span>
               </button>
@@ -81,7 +81,7 @@ export function ModeSelector({ className }: ModeSelectorProps) {
       {selectedMode && (
         <div className="animate-fade-in glass rounded-xl px-4 py-3 flex items-start gap-3">
           <span className="text-lg shrink-0 mt-0.5">📸</span>
-          <p className="font-body text-white/60 text-xs leading-relaxed">
+          <p className="font-body text-white/60 text-base leading-relaxed">
             {selectedMode === "story"
               ? "Point your camera at your surroundings to bring them to life."
               : "Point your camera at your environment to activate context-aware missions."}
@@ -135,10 +135,10 @@ function ModeCard({ selected, onSelect, icon, title, tagline, accentClass, activ
     >
       <span className="text-2xl">{icon}</span>
       <div>
-        <p className={cn("font-semibold text-sm", selected ? "text-white" : "text-white/80")}>
+        <p className={cn("font-semibold text-base", selected ? "text-white" : "text-white/80")}>
           {title}
         </p>
-        <p className="font-body text-[11px] text-white/50 mt-0.5 leading-tight">{tagline}</p>
+        <p className="font-body text-sm text-white/50 mt-0.5 leading-tight">{tagline}</p>
       </div>
     </button>
   );

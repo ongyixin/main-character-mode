@@ -7,7 +7,6 @@ import type { StoryQuest, ObjectCharacter } from "@/types";
 interface QuestCardProps {
   quest: StoryQuest | null;
   issuedByCharacter?: ObjectCharacter;
-  /** Compatibility: story/page.tsx passes issuerName as a string */
   issuerName?: string;
   onAccept: (quest: StoryQuest) => void;
   onDecline: (quest: StoryQuest) => void;
@@ -15,13 +14,13 @@ interface QuestCardProps {
 
 const QUEST_TYPE_CONFIG: Record<
   StoryQuest["type"],
-  { emoji: string; label: string; color: string }
+  { emoji: string; label: string; color: string; borderColor: string }
 > = {
-  fetch: { emoji: "📦", label: "Fetch Quest", color: "text-amber-400" },
-  social: { emoji: "🗣️", label: "Social Quest", color: "text-blue-400" },
-  choice: { emoji: "⚖️", label: "Choice Quest", color: "text-violet-400" },
-  challenge: { emoji: "⚔️", label: "Challenge", color: "text-rose-400" },
-  survival: { emoji: "🌀", label: "Survival", color: "text-orange-400" },
+  fetch:     { emoji: "📦", label: "FETCH QUEST",  color: "#FFDE00",               borderColor: "#B3A125" },
+  social:    { emoji: "🗣️", label: "SOCIAL QUEST", color: "#B0C4FF",               borderColor: "#3B4CCA" },
+  choice:    { emoji: "⚖️", label: "CHOICE QUEST", color: "#B0C4FF",               borderColor: "#3B4CCA" },
+  challenge: { emoji: "⚔️", label: "CHALLENGE",    color: "rgba(255,100,100,0.9)", borderColor: "#CC0000" },
+  survival:  { emoji: "🌀", label: "SURVIVAL",     color: "#FFDE00",               borderColor: "#CC0000" },
 };
 
 export function QuestCard({
@@ -37,46 +36,60 @@ export function QuestCard({
 
   return (
     <motion.div
-      className="absolute inset-x-4 bottom-32 z-[35]"
-      initial={{ y: 80, opacity: 0, scale: 0.95 }}
-      animate={{ y: 0, opacity: 1, scale: 1 }}
-      exit={{ y: 40, opacity: 0, scale: 0.9 }}
-      transition={{ type: "spring", damping: 24, stiffness: 280 }}
+      className="absolute inset-x-3 bottom-32 z-[35]"
+      initial={{ y: 80, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: 40, opacity: 0 }}
+      transition={{ type: "spring", damping: 25, stiffness: 280 }}
     >
-      <div className="glass-story rounded-2xl overflow-hidden border-glow-story">
-        {/* Header band */}
-        <div className="bg-gradient-to-r from-[#7b3fc4]/60 to-[#c89b3c]/30 px-4 py-2.5 flex items-center gap-2">
-          <span className="text-lg">{typeConfig.emoji}</span>
-          <div>
-            <p className={cn("font-mono-dm text-[10px] tracking-widest uppercase", typeConfig.color)}>
-              {typeConfig.label} Received
-            </p>
-            {displayIssuerName && (
-              <p className="font-body text-white/50 text-[10px]">
-                Issued by {displayIssuerName}
-                {issuedByCharacter && `, ${issuedByCharacter.personality}`}
+      <div
+        style={{
+          border: `2px solid ${typeConfig.color}`,
+          boxShadow: `4px 4px 0 ${typeConfig.borderColor}80`,
+          background: "rgba(30,6,6,0.98)",
+        }}
+      >
+        {/* Header bar */}
+        <div
+          className="flex items-center justify-between px-3 py-2"
+          style={{
+            background: typeConfig.borderColor,
+            borderBottom: `2px solid ${typeConfig.color}`,
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-base">{typeConfig.emoji}</span>
+            <div>
+              <p className="font-pixel text-base" style={{ color: typeConfig.color }}>
+                {typeConfig.label} RECEIVED
               </p>
-            )}
+              {displayIssuerName && (
+                <p className="font-vt text-xl" style={{ color: "rgba(255,255,255,0.55)" }}>
+                  Issued by {displayIssuerName}
+                  {issuedByCharacter && `, ${issuedByCharacter.personality}`}
+                </p>
+              )}
+            </div>
           </div>
-          {/* Dramatic flourish */}
-          <div className="ml-auto">
-            <motion.div
-              animate={{ rotate: [0, 5, -5, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="text-xl"
-            >
-              📜
-            </motion.div>
-          </div>
+          <motion.span
+            animate={{ rotate: [0, 5, -5, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="text-xl"
+          >
+            📜
+          </motion.span>
         </div>
 
         {/* Quest content */}
         <div className="px-4 py-4">
-          <h3 className="font-display text-[#f0d898] text-lg font-bold leading-tight text-glow-story mb-2">
+          <p className="font-pixel text-base mb-2 tracking-wider" style={{ color: "rgba(255,222,0,0.45)" }}>
+            ★ QUEST AVAILABLE ★
+          </p>
+          <h3 className="font-pixel text-base leading-loose mb-2" style={{ color: "#FFF0B0" }}>
             {quest.title}
           </h3>
-          <p className="font-body text-white/80 text-sm leading-relaxed italic">
-            "{quest.description}"
+          <p className="font-vt text-base italic leading-snug" style={{ color: "rgba(255,255,255,0.65)" }}>
+            &ldquo;{quest.description}&rdquo;
           </p>
         </div>
 
@@ -84,24 +97,35 @@ export function QuestCard({
         <div className="px-4 pb-4 grid grid-cols-2 gap-2">
           <button
             onClick={() => onAccept(quest)}
-            className={cn(
-              "touch-target rounded-xl py-3 font-body font-semibold text-sm",
-              "bg-gradient-to-r from-[#7b3fc4] to-[#c89b3c]",
-              "text-white shadow-[0_4px_16px_rgba(123,63,196,0.4)]",
-              "active:scale-95 transition-transform"
-            )}
+            className="touch-target font-pixel active:translate-x-[2px] active:translate-y-[2px]"
+            style={{
+              background: "#CC0000",
+              border: "2px solid #FFDE00",
+              boxShadow: "3px 3px 0 rgba(255,222,0,0.4)",
+              color: "#FFDE00",
+              fontSize: "11px",
+              letterSpacing: "0.08em",
+              padding: "12px 8px",
+              transition: "box-shadow 0.05s, transform 0.05s",
+            }}
           >
-            Accept ✦
+            ▶ ACCEPT
           </button>
           <button
             onClick={() => onDecline(quest)}
-            className={cn(
-              "touch-target rounded-xl py-3 font-body text-sm",
-              "glass border border-white/10 text-white/60 hover:text-white/90",
-              "active:scale-95 transition-all"
-            )}
+            className="touch-target font-pixel active:translate-x-[1px] active:translate-y-[1px]"
+            style={{
+              background: "transparent",
+              border: "2px solid rgba(255,255,255,0.2)",
+              boxShadow: "2px 2px 0 rgba(255,255,255,0.08)",
+              color: "rgba(255,255,255,0.4)",
+              fontSize: "11px",
+              letterSpacing: "0.08em",
+              padding: "10px 8px",
+              transition: "box-shadow 0.05s, transform 0.05s",
+            }}
           >
-            Decline
+            ✕ DECLINE
           </button>
         </div>
       </div>

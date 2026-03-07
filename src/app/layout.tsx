@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
-import { Rajdhani, Cinzel, DM_Mono, Outfit } from "next/font/google";
+import { Press_Start_2P, VT323, DM_Mono, Rajdhani } from "next/font/google";
 import "./globals.css";
 
 const geistSans = localFont({
@@ -15,22 +15,23 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
-const rajdhani = Rajdhani({
+/** Primary pixel art font — HUD labels, badges, titles */
+const pressStart2P = Press_Start_2P({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-rajdhani",
+  weight: ["400"],
+  variable: "--font-pixel",
   display: "swap",
 });
 
-/** Story mode display font — dramatic, roman, cinematic */
-const cinzel = Cinzel({
+/** Large readable pixel font — dialogue, narration, descriptions */
+const vt323 = VT323({
   subsets: ["latin"],
-  weight: ["400", "700", "900"],
-  variable: "--font-cinzel",
+  weight: ["400"],
+  variable: "--font-vt",
   display: "swap",
 });
 
-/** Quest mode monospace — dry mission-control readout */
+/** Data readouts — timestamps, XP numbers, quest codes */
 const dmMono = DM_Mono({
   subsets: ["latin"],
   weight: ["400", "500"],
@@ -38,11 +39,11 @@ const dmMono = DM_Mono({
   display: "swap",
 });
 
-/** Body copy — clean, modern */
-const outfit = Outfit({
+/** Fallback display font for larger headers */
+const rajdhani = Rajdhani({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
-  variable: "--font-outfit",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-rajdhani",
   display: "swap",
 });
 
@@ -52,7 +53,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#050a0f",
+  themeColor: "#06040e",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -67,7 +68,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${rajdhani.variable} ${cinzel.variable} ${dmMono.variable} ${outfit.variable} antialiased bg-[#050a0f]`}
+        className={`${geistSans.variable} ${geistMono.variable} ${pressStart2P.variable} ${vt323.variable} ${dmMono.variable} ${rajdhani.variable} bg-[#06040e]`}
       >
         {children}
       </body>

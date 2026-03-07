@@ -1,45 +1,33 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/cn";
 import type { StoryModeState, StoryGenre, ObjectCharacter } from "@/types";
 
 interface StoryHUDProps {
   storyState: StoryModeState | null;
-  // Original API
   sessionStartedAt?: number;
   onScan?: () => void;
   onSelectCharacter?: (character: ObjectCharacter) => void;
   scanLoading?: boolean;
   selectedCharacterId?: string | null;
-  // Extended API (story/page.tsx compat)
   progression?: import("@/types").ProgressionState;
   scanState?: string;
   onScanRetry?: () => void;
   onRecap?: () => void;
 }
 
-const GENRE_CONFIG: Record<StoryGenre, { emoji: string; label: string; accentClass: string }> = {
-  dating_sim: { emoji: "💘", label: "Dating Sim", accentClass: "text-rose-300 border-rose-400/30" },
-  mystery: { emoji: "🔍", label: "Mystery", accentClass: "text-blue-300 border-blue-400/30" },
-  fantasy: { emoji: "⚔️", label: "Fantasy", accentClass: "text-emerald-300 border-emerald-400/30" },
-  survival: { emoji: "🪓", label: "Survival", accentClass: "text-orange-300 border-orange-400/30" },
-  workplace_drama: { emoji: "💼", label: "Work Drama", accentClass: "text-amber-300 border-amber-400/30" },
-  soap_opera: { emoji: "🌹", label: "Soap Opera", accentClass: "text-violet-300 border-violet-400/30" },
+const GENRE_CONFIG: Record<StoryGenre, { emoji: string; label: string; color: string; borderColor: string }> = {
+  dating_sim:      { emoji: "💘", label: "DATING SIM",   color: "rgba(255,100,100,0.9)", borderColor: "#CC0000" },
+  mystery:         { emoji: "🔍", label: "MYSTERY",      color: "#B0C4FF",               borderColor: "#3B4CCA" },
+  fantasy:         { emoji: "⚔️", label: "FANTASY",      color: "#B0C4FF",               borderColor: "#3B4CCA" },
+  survival:        { emoji: "🪓", label: "SURVIVAL",     color: "rgba(255,100,100,0.9)", borderColor: "#CC0000" },
+  workplace_drama: { emoji: "💼", label: "WORK DRAMA",   color: "#FFDE00",               borderColor: "#B3A125" },
+  soap_opera:      { emoji: "🌹", label: "SOAP OPERA",   color: "rgba(255,100,100,0.9)", borderColor: "#CC0000" },
 };
-
-function useElapsedTime(startedAt: number): string {
-  // Returns a formatted "mm:ss" string — client-side only
-  if (typeof window === "undefined") return "00:00";
-  const seconds = Math.floor((Date.now() - startedAt) / 1000);
-  const m = Math.floor(seconds / 60).toString().padStart(2, "0");
-  const s = (seconds % 60).toString().padStart(2, "0");
-  return `${m}:${s}`;
-}
 
 export function StoryHUD({
   storyState,
-  sessionStartedAt,
   onScan,
   onSelectCharacter,
   scanLoading,
@@ -52,108 +40,139 @@ export function StoryHUD({
   const phase = storyState?.phase ?? "scanning";
 
   return (
-    <div className="absolute bottom-0 inset-x-0 z-[20] flex flex-col gap-2 px-4 pb-6 pt-3 safe-bottom">
-      {/* Gradient fade up from bottom */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
+    <div className="absolute bottom-0 inset-x-0 z-[20] flex flex-col gap-2 px-3 pb-5 pt-3 safe-bottom">
+      {/* Gradient fade from bottom */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: "linear-gradient(to top, rgba(6,4,14,0.85) 0%, rgba(6,4,14,0.4) 60%, transparent 100%)" }}
+      />
 
       <div className="relative z-10 flex flex-col gap-2">
-        {/* Top row: genre badge + phase + timer */}
-        <div className="flex items-center justify-between">
+        {/* Status row */}
+        <div className="flex items-center gap-2 justify-between">
+          {/* Genre badge */}
           <div
-            className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1 rounded-full glass border",
-              genreConfig.accentClass
-            )}
+            className="flex items-center gap-1.5 px-2.5 py-1"
+            style={{
+              border: `2px solid ${genreConfig.borderColor}`,
+              background: "rgba(30,6,6,0.92)",
+              boxShadow: `2px 2px 0 ${genreConfig.borderColor}80`,
+            }}
           >
-            <span className="text-sm">{genreConfig.emoji}</span>
-            <span className={cn("font-mono-dm text-[10px] tracking-widest uppercase", genreConfig.accentClass.split(" ")[0])}>
+            <span className="text-base leading-none">{genreConfig.emoji}</span>
+            <span className="font-pixel text-base tracking-wide" style={{ color: genreConfig.color }}>
               {genreConfig.label}
             </span>
           </div>
 
           <div className="flex items-center gap-2">
             {activeQuests.length > 0 && (
-              <div className="flex items-center gap-1 px-2 py-0.5 rounded-full glass border border-amber-400/30">
-                <span className="text-xs">⚔️</span>
-                <span className="font-mono-dm text-[10px] text-amber-300">
-                  {activeQuests.length} Quest{activeQuests.length > 1 ? "s" : ""}
+              <div
+                className="flex items-center gap-1 px-2 py-1"
+                style={{ border: "2px solid #B3A125", background: "rgba(30,6,6,0.92)", boxShadow: "2px 2px 0 rgba(179,161,37,0.5)" }}
+              >
+                <span className="text-base">⚔️</span>
+                <span className="font-pixel text-base" style={{ color: "#FFDE00" }}>
+                  {activeQuests.length} QUEST{activeQuests.length > 1 ? "S" : ""}
                 </span>
               </div>
             )}
-            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full glass">
-              <span className="font-mono-dm text-[10px] text-white/40 tracking-widest">
+            <div
+              className="px-2 py-1"
+              style={{ border: "1px solid rgba(255,255,255,0.1)", background: "rgba(30,6,6,0.75)" }}
+            >
+              <span className="font-pixel text-base tracking-wider" style={{ color: "rgba(255,255,255,0.3)" }}>
                 {phase.toUpperCase().replace("_", " ")}
               </span>
             </div>
           </div>
         </div>
 
-        {/* Character scroll list */}
+        {/* Character scroll */}
         {characters.length > 0 ? (
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
             {characters.map((c) => (
               <motion.button
                 key={c.id}
                 onClick={onSelectCharacter ? () => onSelectCharacter(c) : undefined}
-                className={cn(
-                  "flex-shrink-0 flex flex-col items-center gap-0.5",
-                  "px-3 py-2 rounded-xl glass-story border transition-all",
-                  "touch-target",
-                  selectedCharacterId === c.id
-                    ? "border-[#c89b3c]/60 shadow-[0_0_12px_rgba(200,155,60,0.3)]"
-                    : "border-transparent"
-                )}
+                className="flex-shrink-0 flex flex-col items-start touch-target"
+                style={{
+                  padding: "6px 10px",
+                  border: `2px solid ${selectedCharacterId === c.id ? "#FFDE00" : "rgba(204,0,0,0.5)"}`,
+                  background: selectedCharacterId === c.id ? "rgba(204,0,0,0.3)" : "rgba(30,6,6,0.9)",
+                  boxShadow: selectedCharacterId === c.id ? "2px 2px 0 rgba(255,222,0,0.4)" : "2px 2px 0 rgba(204,0,0,0.3)",
+                  minWidth: 80,
+                }}
                 whileTap={{ scale: 0.93 }}
               >
-                <span className="font-display text-[#f0d898] text-xs font-semibold whitespace-nowrap">
+                <span className="font-pixel text-base whitespace-nowrap" style={{ color: selectedCharacterId === c.id ? "#FFDE00" : "#FFF0B0" }}>
                   {c.name}
                 </span>
-                <span className="font-body text-white/40 text-[9px] whitespace-nowrap">
+                <span className="font-vt text-base whitespace-nowrap" style={{ color: "rgba(255,255,255,0.4)" }}>
                   {c.emotionalState}
                 </span>
-                {/* Tiny relationship indicator */}
-                <div className="w-8 h-0.5 rounded-full bg-white/10 overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-[#7b3fc4] to-[#c89b3c]"
-                    style={{ width: `${Math.abs(c.relationshipToUser)}%` }}
-                  />
+                {/* Relationship bar — segmented */}
+                <div className="flex gap-0.5 mt-1.5">
+                  {Array.from({ length: 8 }).map((_, i) => {
+                    const filled = i < Math.round((Math.abs(c.relationshipToUser) / 100) * 8);
+                    const isPositive = c.relationshipToUser >= 0;
+                    return (
+                      <div
+                        key={i}
+                        className="w-1.5 h-1"
+                        style={{
+                    border: `1px solid ${isPositive ? "#FFDE00" : "#FF0000"}`,
+                    background: filled ? (isPositive ? "#FFDE00" : "#FF0000") : "transparent",
+                        }}
+                      />
+                    );
+                  })}
                 </div>
               </motion.button>
             ))}
           </div>
         ) : (
-          <p className="font-body text-white/30 text-xs text-center italic py-1">
-            Scan the room to find the characters hiding in your objects
-          </p>
+          <div
+            className="py-2 px-3"
+            style={{ border: "1px solid rgba(204,0,0,0.3)", background: "rgba(30,6,6,0.7)" }}
+          >
+            <p className="font-vt text-xl text-center" style={{ color: "rgba(255,255,255,0.25)" }}>
+              ▸ Scan room to discover characters
+            </p>
+          </div>
         )}
 
         {/* Scan button */}
         <motion.button
           onClick={onScan}
           disabled={scanLoading}
-          className={cn(
-            "w-full touch-target rounded-2xl py-3.5 font-display font-bold text-sm tracking-widest",
-            "bg-gradient-to-r from-[#7b3fc4] to-[#c89b3c]",
-            "text-white shadow-[0_4px_24px_rgba(123,63,196,0.5)]",
-            "disabled:opacity-60 active:scale-98 transition-all"
-          )}
-          whileTap={{ scale: 0.97 }}
+          className="w-full touch-target font-pixel disabled:opacity-60"
+          style={{
+            background: scanLoading ? "rgba(204,0,0,0.4)" : "#CC0000",
+            border: "2px solid #FFDE00",
+            boxShadow: scanLoading ? "none" : "3px 3px 0 rgba(255,222,0,0.4)",
+            padding: "10px 16px",
+            fontSize: "16px",
+            letterSpacing: "0.12em",
+            color: "#FFDE00",
+            transition: "box-shadow 0.05s, transform 0.05s",
+          }}
+          whileTap={{ scale: 0.97, boxShadow: "1px 1px 0 rgba(255,222,0,0.4)" }}
         >
           {scanLoading ? (
             <span className="flex items-center justify-center gap-2">
               <motion.span
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                className="inline-block"
+                animate={{ opacity: [1, 0, 1] }}
+                transition={{ duration: 0.6, repeat: Infinity, ease: "linear", repeatType: "mirror" }}
               >
-                ◐
+                ◈
               </motion.span>
-              Scanning…
+              SCANNING...
             </span>
           ) : characters.length === 0 ? (
-            "✦ SCAN ROOM ✦"
+            "▸ SCAN ROOM ◂"
           ) : (
-            "✦ RESCAN ✦"
+            "▸ RESCAN ◂"
           )}
         </motion.button>
       </div>

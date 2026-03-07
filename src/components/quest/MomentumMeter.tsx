@@ -9,12 +9,12 @@ interface MomentumMeterProps {
   className?: string;
 }
 
-const COMBO_LABELS: Array<{ threshold: number; label: string; color: string }> = [
-  { threshold: 8, label: "MAXIMUM OUTPUT", color: "#f59e0b" },
-  { threshold: 5, label: "LOCKED IN", color: "#ef4444" },
-  { threshold: 3, label: "MOMENTUM", color: "#f97316" },
-  { threshold: 1, label: "ENGAGED", color: "#00d4ff" },
-  { threshold: 0, label: "STANDBY", color: "rgba(255,255,255,0.3)" },
+const COMBO_LABELS: Array<{ threshold: number; label: string; color: string; borderColor: string }> = [
+  { threshold: 8, label: "MAX OUTPUT", color: "#FFDE00", borderColor: "#B3A125" },
+  { threshold: 5, label: "LOCKED IN",  color: "#FF0000", borderColor: "#CC0000" },
+  { threshold: 3, label: "MOMENTUM",   color: "#FFDE00", borderColor: "#CC0000" },
+  { threshold: 1, label: "ENGAGED",    color: "#FFDE00", borderColor: "#3B4CCA" },
+  { threshold: 0, label: "STANDBY",    color: "rgba(255,255,255,0.25)", borderColor: "rgba(255,255,255,0.1)" },
 ];
 
 function getComboConfig(combo: number) {
@@ -24,82 +24,83 @@ function getComboConfig(combo: number) {
   );
 }
 
+const SEGMENTS = 12;
+
 export function MomentumMeter({ momentum, className }: MomentumMeterProps) {
   const config = getComboConfig(momentum.currentCombo);
   const score = momentum.sessionProductivityScore;
-  const segments = 12;
-  const filledSegments = Math.round((score / 100) * segments);
+  const filledSegments = Math.round((score / 100) * SEGMENTS);
 
   return (
     <div
-      className={cn(
-        "flex flex-col items-center gap-2 py-3 px-2",
-        "rounded",
-        className
-      )}
+      className={cn("flex flex-col items-center gap-2 py-3 px-2", className)}
       style={{
-        background: "rgba(2, 13, 20, 0.85)",
-        border: `1px solid ${config.color}20`,
-        backdropFilter: "blur(12px)",
+        border: `2px solid ${config.borderColor}`,
+        background: "rgba(6,8,30,0.95)",
+        boxShadow: `3px 3px 0 ${config.borderColor}80`,
+        minWidth: 44,
       }}
     >
-      {/* Combo count */}
+      {/* Combo multiplier */}
       <motion.div
         key={momentum.currentCombo}
-        initial={{ scale: 1.3, opacity: 0 }}
+        initial={{ scale: 1.4, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.2 }}
-        className="font-mono text-2xl font-bold tabular-nums leading-none"
-        style={{ color: config.color }}
+        transition={{ duration: 0.15, type: "spring" }}
+        className="font-pixel tabular-nums leading-none text-center"
+        style={{ color: config.color, fontSize: "14px" }}
       >
         ×{momentum.currentCombo}
       </motion.div>
 
-      {/* Label */}
+      {/* Status label */}
       <div
-        className="font-mono text-[8px] tracking-[0.15em] uppercase text-center leading-none"
-        style={{ color: config.color, opacity: 0.7 }}
+        className="font-pixel text-center leading-tight"
+        style={{ color: config.color, opacity: 0.7, fontSize: "9px", letterSpacing: "0.08em", maxWidth: 48, wordBreak: "break-all" }}
       >
         {config.label}
       </div>
 
-      {/* Score bar (vertical segments) */}
-      <div className="flex flex-col gap-0.5 w-5">
-        {Array.from({ length: segments })
+      {/* Vertical segmented bar */}
+      <div className="flex flex-col gap-[2px] w-full">
+        {Array.from({ length: SEGMENTS })
           .reverse()
           .map((_, i) => {
-            const segIndex = segments - 1 - i;
+            const segIndex = SEGMENTS - 1 - i;
             const isFilled = segIndex < filledSegments;
             return (
               <motion.div
                 key={segIndex}
-                className="h-1.5 w-full rounded-sm"
+                className="h-2 w-full"
                 animate={{
-                  backgroundColor: isFilled ? config.color : "rgba(255,255,255,0.06)",
-                  opacity: isFilled ? 1 : 0.4,
+                  background: isFilled ? config.color : "transparent",
+                  borderColor: isFilled ? config.color : config.borderColor + "40",
                 }}
-                transition={{ duration: 0.3, delay: segIndex * 0.02 }}
+                transition={{ duration: 0.25, delay: segIndex * 0.015 }}
+                style={{
+                  border: `1px solid ${isFilled ? config.color : config.borderColor + "40"}`,
+                  boxShadow: isFilled && segIndex === filledSegments - 1 ? `0 0 4px ${config.color}` : "none",
+                }}
               />
             );
           })}
       </div>
 
-      {/* Score number */}
+      {/* Score */}
       <div
-        className="font-mono text-[9px] tabular-nums"
-        style={{ color: "rgba(255,255,255,0.3)" }}
+        className="font-pixel tabular-nums"
+        style={{ color: "rgba(255,255,255,0.25)", fontSize: "11px" }}
       >
         {score}
       </div>
 
-      {/* Idle warning indicator */}
+      {/* Idle warning */}
       {momentum.idlePenaltyTriggered && (
         <motion.div
-          initial={{ opacity: 0 }}
           animate={{ opacity: [0.4, 1, 0.4] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-          className="w-2 h-2 rounded-full"
-          style={{ background: "#ef4444" }}
+          transition={{ duration: 1.2, repeat: Infinity }}
+          className="w-2 h-2"
+          style={{ background: "#FF0000" }}
         />
       )}
     </div>

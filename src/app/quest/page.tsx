@@ -14,16 +14,14 @@ import type { SessionState } from "@/types";
 type UIPhase = "input" | "briefing" | "active" | "done";
 
 /**
- * Quest Mode page shell.
+ * Quest Mode page shell — tactical pixel-retro overlay.
  *
  * Layer stack (bottom → top):
  *   0. Camera feed
- *   1. Cold dark gradient overlay
+ *   1. Dark tactical overlay
  *   2. HUD + MomentumMeter
  *   3. Main content (briefing / active / task input)
- *   4. NarrationBanner (bottom)
- *
- * Quest Agent replaces mock state with live state from /api/session, /api/task, /api/progress.
+ *   4. NarrationBanner (top)
  */
 export default function QuestPage() {
   const [session] = useState<SessionState>(MOCK_QUEST_SESSION);
@@ -40,16 +38,14 @@ export default function QuestPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleTaskSubmit = async (taskText: string) => {
-    // Quest Agent: POST /api/task with { sessionId, taskText }
     setIsSubmitting(true);
     console.log("[Quest] submit task:", taskText);
-    await new Promise((r) => setTimeout(r, 500)); // mock latency
+    await new Promise((r) => setTimeout(r, 500));
     setIsSubmitting(false);
     setPhase("briefing");
   };
 
   const handleAcceptMission = (missionId: string) => {
-    // Quest Agent: POST /api/progress { signal: "context_detected" }
     console.log("[Quest] accept mission:", missionId);
     setPhase("active");
   };
@@ -60,37 +56,45 @@ export default function QuestPage() {
   };
 
   const handleComplete = (missionId: string) => {
-    // Quest Agent: POST /api/progress { signal: "mission_complete" }
     console.log("[Quest] complete:", missionId);
     setPhase("done");
   };
 
   const handleAbandon = (missionId: string) => {
-    // Quest Agent: POST /api/progress { signal: "mission_abandon" }
     console.log("[Quest] abandon:", missionId);
     setPhase("input");
   };
 
   return (
-    <div className="relative h-full w-full overflow-hidden" style={{ background: "var(--quest-bg)" }}>
-      {/* Layer 0: Camera feed — renders full-screen via absolute positioning */}
+    <div
+      className="relative h-full w-full overflow-hidden"
+      style={{ background: "var(--quest-bg)" }}
+    >
+      {/* Layer 0: Camera feed */}
       <div className="absolute inset-0 z-0">
-        <Camera className="w-full h-full object-cover opacity-30" mode="quest" />
+        <Camera className="w-full h-full object-cover opacity-25" mode="quest" />
       </div>
 
-      {/* Layer 1: Atmosphere overlay */}
+      {/* Layer 1: Tactical dark overlay */}
       <div
         className="absolute inset-0 pointer-events-none z-[1]"
         style={{
           background:
-            "radial-gradient(ellipse at 20% 80%, rgba(0,102,170,0.3) 0%, transparent 55%), " +
-            "radial-gradient(ellipse at 80% 20%, rgba(0,212,255,0.1) 0%, transparent 55%), " +
-            "linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 30%, rgba(0,0,0,0.7) 100%)",
+            "radial-gradient(ellipse at 20% 80%, rgba(59,76,202,0.25) 0%, transparent 55%), " +
+            "linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 30%, rgba(0,0,0,0.7) 100%)",
+        }}
+      />
+      {/* Scanlines */}
+      <div
+        className="absolute inset-0 pointer-events-none z-[2]"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.08) 3px, rgba(0,0,0,0.08) 4px)",
         }}
       />
 
       {/* Layer 2: HUD */}
-      <div className="absolute top-0 left-0 z-[20] safe-top px-4 py-3">
+      <div className="absolute top-0 left-0 z-[20] safe-top px-3 py-3">
         <QuestHUD
           progression={sessionState.progression}
           questState={questState}
@@ -100,28 +104,36 @@ export default function QuestPage() {
 
       {/* Momentum meter (right side, active mission only) */}
       {activeMission && phase === "active" && (
-        <div className="absolute top-1/2 right-4 z-[20] -translate-y-1/2">
+        <div className="absolute top-1/2 right-3 z-[20] -translate-y-1/2">
           <MomentumMeter momentum={questState.momentum} />
         </div>
       )}
 
-      {/* Back button */}
-      <div className="absolute top-0 right-0 z-[20] safe-top px-4 py-3">
+      {/* Abort button */}
+      <div className="absolute top-0 right-0 z-[20] safe-top px-3 py-3">
         <a
           href="/"
-          className="glass-quest rounded px-3 py-2 font-mono-dm text-[#00d4ff]/50 text-[10px] tracking-widest uppercase touch-target block"
+          className="flex items-center touch-target"
+          style={{
+            background: "rgba(6,8,30,0.92)",
+            border: "2px solid #3B4CCA",
+            padding: "6px 12px",
+            boxShadow: "2px 2px 0 rgba(59,76,202,0.5)",
+          }}
         >
-          ← ABORT
+          <span className="font-pixel text-base" style={{ color: "rgba(255,222,0,0.6)" }}>
+            ← ABORT
+          </span>
         </a>
       </div>
 
       {/* Layer 3: Main content */}
-      <div className="absolute inset-0 z-[10] flex flex-col justify-end safe-bottom pb-20 px-4 gap-3">
+      <div className="absolute inset-0 z-[10] flex flex-col justify-end safe-bottom pb-20 px-3 gap-3">
         {phase === "input" && (
           <TaskInput
             onSubmit={handleTaskSubmit}
             isLoading={isSubmitting}
-            placeholder="Add a mission (do laundry, reply to emails...)"
+            placeholder="Enter mission (do laundry, reply to emails...)"
           />
         )}
 
@@ -144,35 +156,74 @@ export default function QuestPage() {
         )}
 
         {phase === "done" && (
-          <div className="glass-quest border-glow-quest px-5 py-5 rounded text-center">
-            <p className="font-mono-dm text-green-400 text-sm tracking-widest uppercase mb-3">
-              ✓ Mission Complete
+          <div
+            className="text-center"
+            style={{
+              border: "2px solid #FFDE00",
+              background: "rgba(6,8,30,0.98)",
+              boxShadow: "4px 4px 0 rgba(59,76,202,0.6)",
+              padding: "20px 16px",
+            }}
+          >
+            {/* Window chrome */}
+            <div
+              className="flex items-center justify-center gap-2 mb-4 pb-3"
+              style={{ borderBottom: "1px solid rgba(255,222,0,0.2)" }}
+            >
+              <span className="font-pixel text-base animate-blink" style={{ color: "#FFDE00" }}>
+                ★
+              </span>
+              <span className="font-pixel text-base" style={{ color: "#FFDE00" }}>
+                MISSION COMPLETE
+              </span>
+              <span className="font-pixel text-base animate-blink" style={{ color: "#FFDE00" }}>
+                ★
+              </span>
+            </div>
+            <p className="font-vt text-lg mb-4" style={{ color: "rgba(176,196,255,0.7)" }}>
+              Objective achieved. Well done, operative.
             </p>
-            <a href="/recap?mode=quest" className="btn-quest py-3 px-6 inline-block text-sm">
-              VIEW DEBRIEF →
+            <a
+              href="/recap?mode=quest"
+              className="inline-flex items-center gap-2 font-pixel touch-target px-5 py-3"
+              style={{
+                background: "#FFDE00",
+                border: "2px solid #1a2880",
+                boxShadow: "3px 3px 0 rgba(26,40,128,0.6)",
+                color: "#0a0e30",
+                fontSize: "11px",
+                letterSpacing: "0.08em",
+              }}
+            >
+              VIEW DEBRIEF ▶
             </a>
           </div>
         )}
       </div>
 
       {/* Layer 4: Narration banner */}
-      <div className="absolute bottom-0 left-0 right-0 z-[30] safe-bottom pb-2">
-        <NarrationBanner event={latestNarration} />
+      <div className="absolute top-0 left-0 right-0 z-[30] safe-top pt-16 px-3">
+        <NarrationBanner event={latestNarration} mode="quest" />
       </div>
 
-      {/* Tactical corners */}
+      {/* Pixel corner brackets */}
       <TacticalCorners />
     </div>
   );
 }
 
 function TacticalCorners() {
+  const color = "rgba(255,222,0,0.35)";
   return (
     <div className="absolute inset-3 pointer-events-none z-[5]" aria-hidden>
-      <div className="absolute top-0 left-0 w-5 h-5 border-t border-l border-[#00d4ff]/20" />
-      <div className="absolute top-0 right-0 w-5 h-5 border-t border-r border-[#00d4ff]/20" />
-      <div className="absolute bottom-0 left-0 w-5 h-5 border-b border-l border-[#00d4ff]/20" />
-      <div className="absolute bottom-0 right-0 w-5 h-5 border-b border-r border-[#00d4ff]/20" />
+      <div className="absolute top-0 left-0 w-5 h-5" style={{ borderTop: `2px solid ${color}`, borderLeft: `2px solid ${color}` }} />
+      <div className="absolute top-0 left-0 w-2 h-2" style={{ background: color }} />
+      <div className="absolute top-0 right-0 w-5 h-5" style={{ borderTop: `2px solid ${color}`, borderRight: `2px solid ${color}` }} />
+      <div className="absolute top-0 right-0 w-2 h-2" style={{ background: color }} />
+      <div className="absolute bottom-0 left-0 w-5 h-5" style={{ borderBottom: `2px solid ${color}`, borderLeft: `2px solid ${color}` }} />
+      <div className="absolute bottom-0 left-0 w-2 h-2" style={{ background: color }} />
+      <div className="absolute bottom-0 right-0 w-5 h-5" style={{ borderBottom: `2px solid ${color}`, borderRight: `2px solid ${color}` }} />
+      <div className="absolute bottom-0 right-0 w-2 h-2" style={{ background: color }} />
     </div>
   );
 }

@@ -29,7 +29,7 @@ export { ScanStateIndicator };
 export default function ScanStateIndicator({ state, mode, onRetry }: ScanStateIndicatorProps) {
   const isQuest = mode === "quest";
   const labels = isQuest ? QUEST_LABELS : STORY_LABELS;
-  const accentColor = isQuest ? "#00d4ff" : "#c89b3c";
+  const accentColor = isQuest ? "#5B6CDA" : "#B3A125";
 
   const isActive = state === "scanning" || state === "analyzing";
   const isError = state === "error";
@@ -43,9 +43,9 @@ export default function ScanStateIndicator({ state, mode, onRetry }: ScanStateIn
           className="absolute inset-0 rounded-full"
           style={{
             background: isError
-              ? "rgba(220, 50, 50, 0.3)"
+              ? "rgba(204, 0, 0, 0.3)"
               : isResult
-              ? "rgba(80, 220, 100, 0.3)"
+              ? "rgba(255, 222, 0, 0.3)"
               : isActive
               ? `${accentColor}30`
               : "rgba(255,255,255,0.05)",
@@ -65,9 +65,9 @@ export default function ScanStateIndicator({ state, mode, onRetry }: ScanStateIn
           className="w-2 h-2 rounded-full"
           style={{
             background: isError
-              ? "#dc3232"
+              ? "#CC0000"
               : isResult
-              ? "#50dc64"
+              ? "#FFDE00"
               : isActive
               ? accentColor
               : "rgba(255,255,255,0.3)",
@@ -83,12 +83,12 @@ export default function ScanStateIndicator({ state, mode, onRetry }: ScanStateIn
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 4 }}
           transition={{ duration: 0.2 }}
-          className="font-mono text-[10px] tracking-widest uppercase"
+          className="font-mono text-base tracking-wider uppercase"
           style={{
             color: isError
-              ? "#dc3232"
+              ? "#CC0000"
               : isResult
-              ? "#50dc64"
+              ? "#FFDE00"
               : isActive
               ? accentColor
               : "rgba(255,255,255,0.35)",
@@ -104,10 +104,10 @@ export default function ScanStateIndicator({ state, mode, onRetry }: ScanStateIn
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           onClick={onRetry}
-          className="font-mono text-[9px] tracking-wider uppercase px-2 py-0.5 rounded touch-target"
+          className="font-mono text-base tracking-wider uppercase px-2 py-0.5 rounded touch-target"
           style={{
-            border: "1px solid rgba(220,50,50,0.4)",
-            color: "#dc3232",
+            border: "1px solid rgba(204,0,0,0.4)",
+            color: "#CC0000",
           }}
         >
           Retry

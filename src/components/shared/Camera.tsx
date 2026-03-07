@@ -140,8 +140,8 @@ const Camera = forwardRef<CameraHandle, CameraProps>(function Camera(
         className={`flex items-center justify-center bg-black text-white/60 ${className}`}
       >
         <div className="text-center px-8">
-          <p className="text-sm mb-2">Camera access denied</p>
-          <p className="text-xs text-white/40">
+          <p className="text-base mb-2">Camera access denied</p>
+          <p className="text-base text-white/40">
             Enable camera permissions and reload to play.
           </p>
         </div>

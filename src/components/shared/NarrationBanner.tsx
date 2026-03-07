@@ -1,6 +1,4 @@
 "use client";
-// Dynamic narrator overlay — cinematic text at top of screen
-// Used by both Story Mode (dramatic tone) and Quest Mode (mission-control tone)
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -8,20 +6,9 @@ import type { NarrationEvent } from "@/types";
 
 interface NarrationBannerProps {
   event: NarrationEvent | null;
-  /** Mode affects visual style: story=amber, quest=cyan */
   mode?: "story" | "quest";
   autoDismissMs?: number;
 }
-
-const TONE_STYLES: Record<string, string> = {
-  dramatic: "font-semibold tracking-wide",
-  documentary: "font-normal tracking-widest uppercase text-xs",
-  deadpan: "font-light",
-  chaotic: "font-bold",
-  cinematic_briefing: "font-mono text-xs tracking-widest uppercase",
-  field_dispatch: "font-mono text-xs tracking-wider",
-  mission_control: "font-mono text-xs tracking-widest uppercase",
-};
 
 export default function NarrationBanner({
   event,
@@ -39,35 +26,53 @@ export default function NarrationBanner({
     return () => clearTimeout(t);
   }, [event, autoDismissMs]);
 
-  const accentColor = mode === "quest" ? "rgba(0,212,255,0.9)" : "rgba(200,155,60,0.9)";
-  const borderColor = mode === "quest" ? "rgba(0,212,255,0.2)" : "rgba(200,155,60,0.2)";
-  const toneClass = current ? (TONE_STYLES[current.tone] ?? "") : "";
+  const isStory = mode === "story";
+  const borderColor = isStory ? "#CC0000" : "#3B4CCA";
+  const accentColor = isStory ? "#FFDE00" : "#FFDE00";
+  const bgColor = isStory ? "rgba(30,6,6,0.97)" : "rgba(6,8,30,0.97)";
+  const shadowColor = isStory ? "rgba(204,0,0,0.6)" : "rgba(59,76,202,0.6)";
+  const label = isStory ? "▸ NARRATOR" : "▸ FIELD DISPATCH";
 
   return (
     <AnimatePresence>
       {visible && current && (
         <motion.div
           key={current.id ?? current.text}
-          initial={{ opacity: 0, y: -8 }}
+          initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.35, ease: "easeOut" }}
-          className="mx-4"
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.25 }}
+          className="mx-0"
         >
           <div
-            className="px-4 py-3 rounded-xl"
             style={{
-              background: "rgba(0,0,0,0.72)",
-              backdropFilter: "blur(12px)",
-              border: `1px solid ${borderColor}`,
+              border: `2px solid ${borderColor}`,
+              background: bgColor,
+              boxShadow: `3px 3px 0 ${shadowColor}`,
             }}
           >
-            <p
-              className={`text-sm leading-snug ${toneClass}`}
-              style={{ color: accentColor }}
+            {/* Header chrome */}
+            <div
+              className="flex items-center gap-2 px-3 py-1"
+              style={{
+                background: borderColor,
+                borderBottom: `1px solid ${accentColor}40`,
+              }}
             >
-              {current.text}
-            </p>
+              <div
+                className="w-1.5 h-1.5 animate-pulse2"
+                style={{ background: accentColor }}
+              />
+              <span className="font-pixel text-base tracking-wider" style={{ color: accentColor }}>
+                {label}
+              </span>
+            </div>
+            {/* Message */}
+            <div className="px-3 py-2.5">
+              <p className="font-vt text-xl leading-snug" style={{ color: isStory ? "#FFF0B0" : "#B0C4FF" }}>
+                {current.text}
+              </p>
+            </div>
           </div>
         </motion.div>
       )}
@@ -75,5 +80,4 @@ export default function NarrationBanner({
   );
 }
 
-// Also export as named so barrel index.ts works
 export { NarrationBanner };

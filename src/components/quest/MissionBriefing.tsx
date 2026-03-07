@@ -5,83 +5,141 @@ import type { Mission } from "@/types";
 
 interface MissionBriefingProps {
   mission: Mission;
-  // Original API
   onAccept?: (missionId: string) => void;
   onSkip?: (missionId: string) => void;
-  // Extended API (quest/page.tsx compat — passes full mission object)
   onAcceptMission?: (mission: Mission) => void;
   onDefer?: (mission: Mission) => void;
   className?: string;
 }
 
-/**
- * Mission briefing card — shown before a quest task begins.
- * Quest Agent wires onAccept to POST /api/progress with signal: "mission_complete".
- */
 export function MissionBriefing({ mission, onAccept, onSkip, onAcceptMission, onDefer, className }: MissionBriefingProps) {
   const handleAccept = () => { onAcceptMission?.(mission); onAccept?.(mission.id); };
   const handleSkip = () => { onDefer?.(mission); onSkip?.(mission.id); };
+
   return (
-    <div className={cn("glass-quest border-glow-quest px-5 py-5 rounded", className)}>
-      {/* Classification header */}
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-2 h-2 rounded-full bg-[#00d4ff] animate-pulse2" />
-        <span className="font-mono-dm text-[#00d4ff]/60 text-[9px] tracking-[0.3em] uppercase">
-          Mission Briefing
-        </span>
-        <div className="flex-1 h-px bg-[#00d4ff]/15" />
-        <span className="font-mono-dm text-white/30 text-[9px]">
+    <div
+      className={cn(className)}
+      style={{
+        border: "2px solid #3B4CCA",
+        background: "rgba(6,8,30,0.98)",
+        boxShadow: "4px 4px 0 rgba(59,76,202,0.5)",
+      }}
+    >
+      {/* Window chrome */}
+      <div
+        className="flex items-center justify-between px-3 py-2"
+        style={{ background: "#3B4CCA", borderBottom: "2px solid rgba(255,222,0,0.4)" }}
+      >
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 bg-[#FFDE00] animate-pulse2" />
+          <span className="font-pixel text-base tracking-wider" style={{ color: "#FFDE00" }}>
+            ▸ MISSION BRIEFING
+          </span>
+        </div>
+        <span className="font-pixel text-base" style={{ color: "rgba(255,222,0,0.5)" }}>
           {mission.objectives.length} OBJ
         </span>
       </div>
 
-      {/* Original task (raw) */}
-      <p className="font-mono-dm text-white/30 text-[10px] mb-1 tracking-wide">
-        ← {mission.originalTask}
-      </p>
-
-      {/* Mission codename */}
-      <h3 className="font-mono-dm text-[#00d4ff] text-xl font-medium tracking-widest uppercase mb-3 text-glow-quest leading-tight">
-        {mission.codename}
-      </h3>
-
-      {/* Mission briefing */}
-      <p className="font-body text-white/60 text-sm leading-relaxed mb-4">
-        {mission.briefing}
-      </p>
-
-      {/* Objectives */}
-      {mission.objectives.length > 0 && (
-        <div className="flex flex-col gap-1.5 mb-4">
-          {mission.objectives.map((obj) => (
-            <div key={obj.id} className="flex items-center gap-2 text-xs font-mono-dm text-white/50">
-              <span className={obj.completed ? "text-green-400" : "text-[#00d4ff]/40"}>
-                {obj.completed ? "✓" : "○"}
-              </span>
-              <span>{obj.description}</span>
-            </div>
-          ))}
+      <div className="px-4 py-4 flex flex-col gap-3">
+        {/* Raw task */}
+        <div className="flex items-center gap-2">
+          <span className="font-pixel text-base" style={{ color: "rgba(255,255,255,0.25)" }}>
+            INPUT:
+          </span>
+          <span className="font-vt text-lg" style={{ color: "rgba(255,255,255,0.4)" }}>
+            {mission.originalTask}
+          </span>
         </div>
-      )}
 
-      {/* Reward row */}
-      <div className="flex items-center gap-3 mb-5 px-3 py-2 rounded border border-[#00d4ff]/15 bg-[#00d4ff]/5">
-        <span className="font-mono-dm text-[#00d4ff] text-sm font-medium">+{mission.xpReward} XP</span>
-        <div className="h-3 w-px bg-[#00d4ff]/20" />
-        <span className="font-mono-dm text-white/40 text-xs tracking-widest">MISSION REWARD</span>
-      </div>
+        {/* Codename */}
+        <div>
+          <p className="font-pixel text-base mb-1" style={{ color: "rgba(255,222,0,0.4)" }}>
+            OPERATION CODENAME
+          </p>
+          <h3
+            className="font-pixel leading-loose"
+            style={{ color: "#FFDE00", fontSize: "16px", letterSpacing: "0.08em" }}
+          >
+            {mission.codename}
+          </h3>
+        </div>
 
-      {/* Actions */}
-      <div className="flex gap-3">
-        <button onClick={handleAccept} className="flex-1 btn-quest py-3 text-sm">
-          ACCEPT MISSION
-        </button>
-        <button
-          onClick={handleSkip}
-          className="touch-target px-4 rounded border border-white/10 bg-white/5 text-white/40 font-mono-dm text-xs tracking-widest uppercase"
+        {/* Briefing text */}
+        <p className="font-vt text-xl leading-snug" style={{ color: "rgba(176,196,255,0.75)" }}>
+          {mission.briefing}
+        </p>
+
+        {/* Objectives */}
+        {mission.objectives.length > 0 && (
+          <div
+            className="flex flex-col gap-1.5 py-2 px-3"
+            style={{ border: "1px solid rgba(59,76,202,0.5)", background: "rgba(6,8,30,0.6)" }}
+          >
+            <span className="font-pixel text-base mb-1" style={{ color: "rgba(255,222,0,0.4)" }}>
+              OBJECTIVES
+            </span>
+            {mission.objectives.map((obj) => (
+              <div key={obj.id} className="flex items-start gap-2">
+                <span className="font-pixel text-base mt-0.5" style={{ color: obj.completed ? "#FFDE00" : "rgba(255,222,0,0.35)" }}>
+                  {obj.completed ? "■" : "□"}
+                </span>
+                <span className="font-vt text-xl" style={{ color: obj.completed ? "rgba(176,196,255,0.5)" : "rgba(176,196,255,0.7)" }}>
+                  {obj.description}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* XP reward */}
+        <div
+          className="flex items-center gap-3 px-3 py-2"
+          style={{ border: "1px solid rgba(255,222,0,0.2)", background: "rgba(255,222,0,0.05)" }}
         >
-          SKIP
-        </button>
+          <span className="font-pixel text-base" style={{ color: "#FFDE00" }}>
+            +{mission.xpReward} XP
+          </span>
+          <div className="w-px h-3" style={{ background: "rgba(255,222,0,0.2)" }} />
+          <span className="font-pixel text-base tracking-wider" style={{ color: "rgba(255,222,0,0.4)" }}>
+            MISSION REWARD
+          </span>
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-2">
+          <button
+            onClick={handleAccept}
+            className="flex-1 touch-target font-pixel active:translate-x-[2px] active:translate-y-[2px]"
+            style={{
+              background: "#FFDE00",
+              border: "2px solid #1a2880",
+              boxShadow: "3px 3px 0 rgba(26,40,128,0.6)",
+              color: "#0a0e30",
+              fontSize: "11px",
+              letterSpacing: "0.08em",
+              padding: "12px 8px",
+              transition: "box-shadow 0.05s, transform 0.05s",
+            }}
+          >
+            ▶ ACCEPT MISSION
+          </button>
+          <button
+            onClick={handleSkip}
+            className="touch-target font-pixel px-4 active:translate-x-[1px] active:translate-y-[1px]"
+            style={{
+              background: "transparent",
+              border: "2px solid rgba(255,255,255,0.15)",
+              boxShadow: "2px 2px 0 rgba(255,255,255,0.06)",
+              color: "rgba(255,255,255,0.35)",
+              fontSize: "11px",
+              letterSpacing: "0.08em",
+              transition: "box-shadow 0.05s, transform 0.05s",
+            }}
+          >
+            SKIP
+          </button>
+        </div>
       </div>
     </div>
   );

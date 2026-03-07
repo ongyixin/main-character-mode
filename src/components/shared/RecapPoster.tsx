@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/cn";
-import type { ActiveMode, StoryGenre, PosterResponse } from "@/types";
+import type { ActiveMode, StoryGenre } from "@/types";
 
 interface RecapPosterProps {
   mode: ActiveMode;
@@ -10,14 +10,9 @@ interface RecapPosterProps {
   totalXP: number;
   highlights: string[];
   posterUrl?: string;
-  /** If posterUrl is absent (API unavailable), show placeholder */
   className?: string;
 }
 
-/**
- * Episode recap poster — shareable, screenshot-ready.
- * NanoBanana agent fills posterUrl via POST /api/poster.
- */
 export function RecapPoster({
   mode,
   genre,
@@ -28,83 +23,153 @@ export function RecapPoster({
   className,
 }: RecapPosterProps) {
   const isStory = mode === "story";
+  const borderColor = isStory ? "#FFDE00" : "#FFDE00";
+  const innerBorderColor = isStory ? "#CC0000" : "#3B4CCA";
+  const accentColor = isStory ? "#FFDE00" : "#FFDE00";
+  const bgColor = isStory ? "rgba(30,6,6,0.99)" : "rgba(6,8,30,0.99)";
+  const shadowColor = isStory ? "rgba(204,0,0,0.6)" : "rgba(59,76,202,0.6)";
+  const textColor = isStory ? "#FFF0B0" : "#B0C4FF";
+  const titleText = isStory ? `THE ${formatGenre(genre ?? "mystery").toUpperCase()} SESSION` : "MISSION COMPLETE";
+  const subtitle = isStory ? "EPISODE COMPLETE" : "CAMPAIGN DEBRIEF";
 
   return (
     <div
-      className={cn(
-        "relative w-full rounded-3xl overflow-hidden",
-        isStory ? "glass-story border-glow-story" : "glass-quest border-glow-quest",
-        className
-      )}
+      className={cn("relative w-full", className)}
       style={{ aspectRatio: "9/16", maxHeight: "70vh" }}
     >
-      {/* Poster image or placeholder background */}
-      {posterUrl ? (
-        <img src={posterUrl} alt="Episode poster" className="absolute inset-0 w-full h-full object-cover" />
-      ) : (
-        <PosterPlaceholder mode={mode} genre={genre} />
+      {/* Outer gold border */}
+      <div
+        className="absolute inset-0"
+        style={{
+          border: `3px solid ${borderColor}`,
+          boxShadow: `6px 6px 0 ${shadowColor}`,
+        }}
+      />
+      {/* Inner purple/green border */}
+      <div
+        className="absolute inset-[6px]"
+        style={{ border: `1px solid ${innerBorderColor}` }}
+      />
+
+      {/* Background */}
+      <div className="absolute inset-0" style={{ background: bgColor }} />
+
+      {/* Poster image (if available) */}
+      {posterUrl && (
+        <img
+          src={posterUrl}
+          alt="Episode poster"
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ opacity: 0.3 }}
+        />
       )}
 
-      {/* Overlay gradient */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+      {/* Pixel grid overlay */}
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: "linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)",
+          backgroundSize: "16px 16px",
+        }}
+      />
 
       {/* Content */}
-      <div className="absolute inset-0 flex flex-col justify-end p-6 gap-4">
-        {/* Title */}
-        <div>
-          <p className={cn("text-[10px] tracking-[0.2em] uppercase mb-1", isStory ? "font-display text-[#c89b3c]/70" : "font-mono-dm text-[#00d4ff]/60")}>
-            {isStory ? "Episode Complete" : "Campaign Debrief"}
+      <div className="absolute inset-0 flex flex-col px-6 py-8 gap-4">
+        {/* Top area */}
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center">
+          {/* Mode icon */}
+          <div className="text-5xl">{isStory ? "🎭" : "⚡"}</div>
+
+          {/* Stars */}
+          <div className="flex gap-2">
+            {[0, 1, 2].map((i) => (
+              <span key={i} className="font-pixel text-base" style={{ color: accentColor }}>
+                ★
+              </span>
+            ))}
+          </div>
+
+          {/* Subtitle */}
+          <p className="font-pixel text-base tracking-wider" style={{ color: `${accentColor}80` }}>
+            {subtitle}
           </p>
-          <h2 className={cn("text-2xl font-bold leading-tight", isStory ? "font-display text-[#f0d898] text-glow-story" : "font-mono-dm text-[#00d4ff] text-glow-quest")}>
-            {isStory ? `The ${formatGenre(genre ?? "mystery")} Session` : "MISSION COMPLETE"}
-          </h2>
+
+          {/* Main title */}
+          <div
+            className="w-full py-3 px-4"
+            style={{ border: `2px solid ${borderColor}`, background: `${innerBorderColor}40` }}
+          >
+            <h2
+              className="font-pixel leading-loose text-center"
+              style={{ color: accentColor, fontSize: "16px", letterSpacing: "0.06em" }}
+            >
+              {titleText}
+            </h2>
+          </div>
         </div>
 
-        {/* Stats */}
+        {/* Stats grid */}
         <div className="grid grid-cols-3 gap-2">
-          <StatChip label={isStory ? "XP Earned" : "TOTAL XP"} value={`+${totalXP}`} isStory={isStory} />
-          <StatChip label={isStory ? "Duration" : "ELAPSED"} value={`${durationMinutes}m`} isStory={isStory} />
-          <StatChip label={isStory ? "Genre" : "MODE"} value={isStory ? formatGenre(genre ?? "mystery") : "QUEST"} isStory={isStory} />
+          <StatBlock label={isStory ? "XP EARNED" : "TOTAL XP"} value={`+${totalXP}`} color={accentColor} borderColor={innerBorderColor} />
+          <StatBlock label="DURATION" value={`${durationMinutes}M`} color={accentColor} borderColor={innerBorderColor} />
+          <StatBlock label={isStory ? "GENRE" : "MODE"} value={isStory ? formatGenre(genre ?? "mystery").slice(0, 6).toUpperCase() : "QUEST"} color={accentColor} borderColor={innerBorderColor} />
         </div>
 
         {/* Highlights */}
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1.5">
+          <p className="font-pixel text-base tracking-wider mb-1" style={{ color: `${accentColor}60` }}>
+            ▸ HIGHLIGHTS
+          </p>
           {highlights.slice(0, 3).map((h, i) => (
-            <div key={i} className={cn("flex items-center gap-3 px-3 py-2 rounded-xl", isStory ? "glass-story" : "glass-quest")}>
-              <span className="text-lg shrink-0">⚡</span>
-              <p className={cn("text-xs font-medium truncate", isStory ? "text-[#f0d898]" : "text-[#00d4ff]")}>{h}</p>
+            <div
+              key={i}
+              className="flex items-center gap-2 px-3 py-2"
+              style={{
+                border: `1px solid ${innerBorderColor}`,
+                background: `${innerBorderColor}30`,
+              }}
+            >
+              <span className="font-pixel text-base" style={{ color: accentColor }}>■</span>
+              <p className="font-vt text-xl flex-1 truncate" style={{ color: textColor }}>
+                {h}
+              </p>
             </div>
           ))}
         </div>
 
         {/* Watermark */}
-        <p className={cn("text-[10px] text-center opacity-40", isStory ? "font-display" : "font-mono-dm")}>
-          {isStory ? "◆ MAIN CHARACTER MODE ◆" : "[ MAIN CHARACTER MODE ]"}
-        </p>
+        <div className="text-center">
+          <p className="font-pixel text-[9px] tracking-wider" style={{ color: `${accentColor}25` }}>
+            {isStory ? "◆ MAIN CHARACTER MODE ◆" : "[ MAIN CHARACTER MODE ]"}
+          </p>
+        </div>
       </div>
     </div>
   );
 }
 
-function StatChip({ label, value, isStory }: { label: string; value: string; isStory: boolean }) {
+function StatBlock({
+  label,
+  value,
+  color,
+  borderColor,
+}: {
+  label: string;
+  value: string;
+  color: string;
+  borderColor: string;
+}) {
   return (
-    <div className={cn("flex flex-col items-center py-2 px-1 rounded-xl", isStory ? "glass-story" : "glass-quest")}>
-      <span className={cn("text-sm font-bold", isStory ? "font-display text-[#c89b3c]" : "font-mono-dm text-[#00d4ff]")}>{value}</span>
-      <span className="text-[9px] text-white/40 tracking-wide mt-0.5">{label}</span>
-    </div>
-  );
-}
-
-function PosterPlaceholder({ mode, genre }: { mode: ActiveMode; genre?: StoryGenre }) {
-  const isStory = mode === "story";
-  return (
-    <div className={cn("absolute inset-0 flex items-center justify-center", isStory ? "bg-story-gradient" : "bg-quest-gradient")}>
-      <div className="text-center opacity-30">
-        <p className="text-7xl mb-3">{isStory ? "🎭" : "⚡"}</p>
-        <p className={cn("text-xs tracking-widest uppercase", isStory ? "font-display text-[#c89b3c]" : "font-mono-dm text-[#00d4ff]")}>
-          {isStory ? formatGenre(genre ?? "mystery") : "Campaign"}
-        </p>
-      </div>
+    <div
+      className="flex flex-col items-center py-2 px-1"
+      style={{ border: `2px solid ${borderColor}`, background: `${borderColor}30` }}
+    >
+      <span className="font-pixel text-base tabular-nums" style={{ color }}>
+        {value}
+      </span>
+      <span className="font-pixel text-center mt-1" style={{ color: `${color}50`, fontSize: "9px", letterSpacing: "0.04em" }}>
+        {label}
+      </span>
     </div>
   );
 }

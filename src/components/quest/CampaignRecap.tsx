@@ -30,7 +30,7 @@ export function CampaignRecap({
       {/* Header */}
       <div className="flex items-center gap-2 mb-5">
         <div className="w-2 h-2 rounded-full bg-green-400" />
-        <span className="font-mono-dm text-green-400/70 text-[9px] tracking-[0.3em] uppercase">
+          <span className="font-mono-dm text-green-400/70 text-sm tracking-wider uppercase">
           Campaign Debrief
         </span>
       </div>
@@ -44,10 +44,10 @@ export function CampaignRecap({
         ].map(({ label, value }) => (
           <div
             key={label}
-            className="flex flex-col items-center py-3 px-2 rounded border border-[#00d4ff]/15 bg-[#00d4ff]/5"
+            className="flex flex-col items-center py-3 px-2 rounded border border-[#5B6CDA]/15 bg-[#5B6CDA]/5"
           >
-            <span className="font-mono-dm text-[#00d4ff] text-xl font-medium">{value}</span>
-            <span className="font-mono-dm text-white/30 text-[9px] tracking-widest mt-1">{label}</span>
+            <span className="font-mono-dm text-[#5B6CDA] text-xl font-medium">{value}</span>
+            <span className="font-mono-dm text-white/30 text-sm tracking-wider mt-1">{label}</span>
           </div>
         ))}
       </div>
@@ -56,14 +56,14 @@ export function CampaignRecap({
       {completed.length > 0 && (
         <div className="flex flex-col gap-1.5 mb-5">
           {completed.slice(0, 4).map((m) => (
-            <div key={m.id} className="flex items-center gap-2 text-xs">
+            <div key={m.id} className="flex items-center gap-2 text-base">
               <span className="text-green-400 shrink-0">✓</span>
               <span className="font-mono-dm text-white/60 tracking-wide truncate">{m.codename}</span>
-              <span className="font-mono-dm text-[#00d4ff]/50 shrink-0">+{m.xpReward}</span>
+              <span className="font-mono-dm text-[#5B6CDA]/50 shrink-0">+{m.xpReward}</span>
             </div>
           ))}
           {completed.length > 4 && (
-            <p className="font-mono-dm text-white/30 text-[10px]">+{completed.length - 4} more...</p>
+            <p className="font-mono-dm text-white/30 text-base">+{completed.length - 4} more...</p>
           )}
         </div>
       )}

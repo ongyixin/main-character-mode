@@ -61,16 +61,16 @@ const STANCE_BORDER: Record<string, string> = {
   crush:      "border-pink-400/50",
   nemesis:    "border-red-600/60",
   suspicious: "border-yellow-400/50",
-  neutral:    "border-[#c89b3c]/40",
+  neutral:    "border-[#B3A125]/40",
 };
 
 // ─── Size config ──────────────────────────────────────────────────────────────
 
 const SIZE_CONFIG = {
-  sm:   { container: "w-12 h-12",   text: "text-xl",   nameText: "text-[10px]" },
-  md:   { container: "w-16 h-16",   text: "text-2xl",  nameText: "text-xs" },
-  lg:   { container: "w-24 h-24",   text: "text-4xl",  nameText: "text-sm" },
-  full: { container: "w-full h-full", text: "text-5xl", nameText: "text-base" },
+  sm:   { container: "w-12 h-12",   text: "text-xl",   nameText: "text-sm" },
+  md:   { container: "w-16 h-16",   text: "text-2xl",  nameText: "text-base" },
+  lg:   { container: "w-24 h-24",   text: "text-4xl",  nameText: "text-lg" },
+  full: { container: "w-full h-full", text: "text-5xl", nameText: "text-xl" },
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -234,10 +234,10 @@ export function CharacterPortraitRow({
       ))}
       {overflow > 0 && (
         <div
-          className="flex items-center justify-center rounded-xl border border-[#c89b3c]/30 bg-[#c89b3c]/10 shrink-0"
+          className="flex items-center justify-center rounded-xl border border-[#B3A125]/30 bg-[#B3A125]/10 shrink-0"
           style={{ width: 32, height: 32, marginLeft: -8, zIndex: 0 }}
         >
-          <span className="font-display text-[#c89b3c] text-[10px]">+{overflow}</span>
+          <span className="font-display text-[#B3A125] text-base">+{overflow}</span>
         </div>
       )}
     </div>
