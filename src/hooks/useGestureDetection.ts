@@ -102,7 +102,7 @@ export function useGestureDetection(
   const processFrame = useCallback(() => {
     const video = videoRef.current;
     const recognizer = recognizerRef.current;
-    if (!video || !recognizer || video.readyState < 2) {
+    if (!video || !recognizer || video.readyState < 2 || video.videoWidth === 0 || video.videoHeight === 0) {
       rafRef.current = requestAnimationFrame(processFrame);
       return;
     }
@@ -149,8 +149,12 @@ export function useGestureDetection(
           }
         }
       }
-    } catch {
+    } catch (err) {
       // Silently ignore per-frame errors (video may not yet be ready)
+      // Log only in development for debugging
+      if (process.env.NODE_ENV === 'development') {
+        console.debug('[useGestureDetection] Frame processing error:', err);
+      }
     }
 
     rafRef.current = requestAnimationFrame(processFrame);
@@ -183,7 +187,14 @@ export function useGestureDetection(
         });
 
         if (cancelled) {
-          recognizer.close();
+          try {
+            recognizer.close();
+          } catch (err) {
+            // Ignore errors when closing during cancellation
+            if (process.env.NODE_ENV === 'development') {
+              console.debug('[useGestureDetection] Error closing recognizer during cancellation:', err);
+            }
+          }
           return;
         }
 
@@ -204,8 +215,17 @@ export function useGestureDetection(
     return () => {
       cancelled = true;
       stopLoop();
-      recognizerRef.current?.close();
-      recognizerRef.current = null;
+      if (recognizerRef.current) {
+        try {
+          recognizerRef.current.close();
+        } catch (err) {
+          // Ignore errors during cleanup
+          if (process.env.NODE_ENV === 'development') {
+            console.debug('[useGestureDetection] Error closing recognizer during cleanup:', err);
+          }
+        }
+        recognizerRef.current = null;
+      }
       setIsReady(false);
     };
   }, [enabled, processFrame, stopLoop]);

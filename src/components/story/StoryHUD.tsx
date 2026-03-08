@@ -137,7 +137,7 @@ export function StoryHUD({
             style={{ border: "1px solid rgba(204,0,0,0.3)", background: "rgba(30,6,6,0.7)" }}
           >
             <p className="font-vt text-xl text-center" style={{ color: "rgba(255,255,255,0.25)" }}>
-              ▸ Scan room to discover characters
+              ▸ Scan object to discover characters
             </p>
           </div>
         )}
