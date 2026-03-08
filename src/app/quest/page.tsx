@@ -10,6 +10,7 @@ import { MomentumMeter } from "@/components/quest/MomentumMeter";
 import NarrationBanner from "@/components/shared/NarrationBanner";
 import { MusicIndicator } from "@/components/shared/MusicIndicator";
 import { Camera, type CameraHandle } from "@/components/shared/Camera";
+import { useOvershootScene } from "@/hooks/useOvershootScene";
 import { MOCK_QUEST_SESSION } from "@/lib/mock-data";
 import { DEMO_MODE } from "@/lib/constants";
 import type {
@@ -22,6 +23,8 @@ import type {
   ProgressResponse,
   MusicResponse,
   ObjectiveSnapshot,
+  ScanRequest,
+  ScanResponse,
 } from "@/types";
 
 type UIPhase = "input" | "briefing" | "active" | "done";
@@ -113,6 +116,10 @@ export default function QuestPage() {
   const [showGallery, setShowGallery] = useState(false);
   const [phase, setPhase] = useState<UIPhase>("input");
   const cameraRef = useRef<CameraHandle>(null);
+  const lastAutoScanRef = useRef<number>(0);
+
+  // ── Overshoot: continuous scene analysis for auto context detection ──────────
+  const overshootScene = useOvershootScene("quest");
 
   // ── Session initialization ──────────────────────────────────────────────────
   useEffect(() => {
@@ -235,6 +242,45 @@ export default function QuestPage() {
     else if (briefedMission) setPhase("briefing");
     else setPhase("input");
   }, [session?.id]); // only on session ID change (initial load), not on every mutation
+
+  // ── Auto context detection via Overshoot scene analysis ─────────────────────
+  // When a new sceneGraph arrives, call /api/scan to check for mission activations.
+  // Throttled to once per 5 seconds to avoid hammering the server.
+  useEffect(() => {
+    if (DEMO_MODE || !sessionId || !overshootScene.latestSceneGraph) return;
+    const now = Date.now();
+    if (now - lastAutoScanRef.current < 5000) return;
+    lastAutoScanRef.current = now;
+
+    const sceneGraph = overshootScene.latestSceneGraph;
+
+    fetch("/api/scan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId, sceneGraph } as ScanRequest),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: ScanResponse | null) => {
+        if (!data) return;
+        setSession((prev) =>
+          prev
+            ? {
+                ...prev,
+                sceneGraph: data.sceneGraph,
+                narrativeLog: data.narration
+                  ? [...prev.narrativeLog, data.narration]
+                  : prev.narrativeLog,
+                questState:
+                  data.updatedQuestState !== undefined
+                    ? data.updatedQuestState
+                    : prev.questState,
+              }
+            : prev
+        );
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [overshootScene.latestSceneGraph]);
 
   // ── Task submit ─────────────────────────────────────────────────────────────
   const handleTaskSubmit = useCallback(async (taskText: string) => {
@@ -469,9 +515,14 @@ export default function QuestPage() {
       className="relative h-full w-full overflow-hidden"
       style={{ background: "var(--quest-bg)" }}
     >
-      {/* Layer 0: Camera feed */}
+      {/* Layer 0: Camera feed — display uses the Overshoot scene stream */}
       <div className="absolute inset-0 z-0">
-        <Camera ref={cameraRef} className="w-full h-full object-cover opacity-25" mode="quest" />
+        <Camera
+          ref={cameraRef}
+          className="w-full h-full object-cover opacity-25"
+          mode="quest"
+          externalStream={overshootScene.mediaStream}
+        />
       </div>
 
       {/* Layer 1: Tactical dark overlay */}

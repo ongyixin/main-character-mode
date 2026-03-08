@@ -537,7 +537,24 @@ export default function CharacterCollection({ onBack }: { onBack: () => void }) 
   const [filterGenre, setFilterGenre] = useState<StoryGenre | "all">("all");
 
   useEffect(() => {
-    setCharacters(loadSavedCharacters());
+    const load = () => setCharacters(loadSavedCharacters());
+    load();
+
+    // Re-read when the page is restored from bfcache (browser back/forward navigation)
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) load();
+    };
+    // Re-read when the tab becomes visible again (user switches back)
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") load();
+    };
+
+    window.addEventListener("pageshow", handlePageShow);
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      window.removeEventListener("pageshow", handlePageShow);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, []);
 
   function handleRemove(characterId: string) {

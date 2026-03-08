@@ -427,10 +427,10 @@ function TitleCard({ wide = false, onStart }: { wide?: boolean; onStart?: () => 
             {/* Press Start button - only on landing page */}
             {onStart && (
               <motion.div
+                role="button"
                 onClick={onStart}
                 style={{
                   marginTop: 24,
-                  cursor: "pointer",
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
@@ -681,7 +681,16 @@ function PlayTabModeSelect({
 }) {
   const [characterCount, setCharacterCount] = React.useState(0);
   React.useEffect(() => {
-    setCharacterCount(getSavedCharacterCount());
+    const update = () => setCharacterCount(getSavedCharacterCount());
+    update();
+    const handlePageShow = (e: PageTransitionEvent) => { if (e.persisted) update(); };
+    const handleVisibility = () => { if (document.visibilityState === "visible") update(); };
+    window.addEventListener("pageshow", handlePageShow);
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      window.removeEventListener("pageshow", handlePageShow);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, []);
   return (
     <motion.div
@@ -933,6 +942,8 @@ export default function HomePage() {
   const [activeMode, setActiveMode] = useState<"story" | "quest">("story");
   const [entering, setEntering] = useState(false);
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
+  // Incremented each time the collection screen is opened to force a fresh remount
+  const [collectionEpoch, setCollectionEpoch] = useState(0);
 
   // Load settings from localStorage on mount
   useEffect(() => {
@@ -1101,7 +1112,7 @@ export default function HomePage() {
                 setActiveMode={setActiveMode}
                 onEnter={handleEnter}
                 onOpenLog={() => setPlayScreen("quest_log")}
-                onOpenCollection={() => setPlayScreen("collection")}
+                onOpenCollection={() => { setCollectionEpoch((n) => n + 1); setPlayScreen("collection"); }}
               />
             )}
             {activeTab === "play" && playScreen === "genre_select" && (
@@ -1120,7 +1131,7 @@ export default function HomePage() {
             )}
             {activeTab === "play" && playScreen === "collection" && (
               <CharacterCollection
-                key="play-collection"
+                key={`play-collection-${collectionEpoch}`}
                 onBack={() => setPlayScreen("mode_select")}
               />
             )}

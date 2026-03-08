@@ -21,7 +21,7 @@
  * Fallback chain: expression sprite → neutral → portraitUrl → emoji/gradient.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import type { CharacterExpression, ObjectCharacter } from "@/types";
 import type { VoiceState } from "@/hooks/useVoiceAgent";
@@ -98,7 +98,7 @@ interface MouthOverlayProps {
   imageRendering: React.CSSProperties["imageRendering"];
 }
 
-function MouthOverlay({ talkingUrl, mouthOpen, imageRendering }: MouthOverlayProps) {
+const MouthOverlay = memo(function MouthOverlay({ talkingUrl, mouthOpen, imageRendering }: MouthOverlayProps) {
   if (talkingUrl) {
     return (
       <img
@@ -139,7 +139,7 @@ function MouthOverlay({ talkingUrl, mouthOpen, imageRendering }: MouthOverlayPro
       }}
     />
   );
-}
+});
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -157,7 +157,7 @@ export interface AnimatedCharacterSpriteProps {
 
 const MOUTH_FLAP_INTERVAL_MS = 150;
 
-export function AnimatedCharacterSprite({
+export const AnimatedCharacterSprite = memo(function AnimatedCharacterSprite({
   character,
   voiceState,
   size = "md",
@@ -266,6 +266,6 @@ export function AnimatedCharacterSprite({
       )}
     </div>
   );
-}
+});
 
 export default AnimatedCharacterSprite;

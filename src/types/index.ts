@@ -442,7 +442,17 @@ export interface CreateSessionResponse {
 
 export interface ScanRequest {
   sessionId: string;
-  frame: string; // base64 JPEG
+  /**
+   * base64 JPEG frame — required when sceneGraph is not provided (server-side Gemini fallback).
+   * With Overshoot, the client sends a pre-analyzed sceneGraph instead.
+   */
+  frame?: string;
+  /**
+   * Pre-analyzed SceneGraph from an Overshoot client-side stream.
+   * When present, the server skips the VLM image analysis call entirely
+   * and goes straight to personification / context matching.
+   */
+  sceneGraph?: SceneGraph;
   location?: { lat: number; lng: number };
 }
 

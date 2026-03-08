@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Press_Start_2P, VT323, DM_Mono, Rajdhani } from "next/font/google";
 import "./globals.css";
+import { PixelClickEffect } from "@/components/shared/PixelClickEffect";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -72,6 +73,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         {children}
+        <PixelClickEffect />
       </body>
     </html>
   );

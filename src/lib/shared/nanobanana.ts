@@ -133,10 +133,20 @@ async function removeBackgroundMagicWand(
       return (255 - r) < tolerance && (255 - g) < tolerance && (255 - b) < tolerance;
     };
 
-    // BFS flood-fill from corners to identify connected white background pixels
+    // BFS flood-fill from corners to identify connected white background pixels.
+    // Uses a flat Int32Array as a ring buffer (head/tail pointers) so dequeue is
+    // O(1) instead of the O(n) cost of Array.shift(), keeping the full BFS O(n).
     const mask = new Uint8Array(width * height); // 0 = foreground, 255 = background
     const visited = new Uint8Array(width * height);
-    const queue: [number, number][] = [];
+    const totalPixels = width * height;
+    // Each entry stores a linearised pixel index; worst-case all pixels are enqueued.
+    const queueBuf = new Int32Array(totalPixels);
+    let head = 0;
+    let tail = 0;
+
+    const enqueue = (x: number, y: number) => {
+      queueBuf[tail++] = y * width + x;
+    };
 
     const corners: [number, number][] = [
       [0, 0], [width - 1, 0], [0, height - 1], [width - 1, height - 1],
@@ -145,19 +155,21 @@ async function removeBackgroundMagicWand(
       const idx = (cy * width + cx) * 4;
       if (!visited[cy * width + cx] && isNearWhite(idx)) {
         visited[cy * width + cx] = 1;
-        queue.push([cx, cy]);
+        enqueue(cx, cy);
       }
     }
 
-    while (queue.length > 0) {
-      const [x, y] = queue.shift()!;
-      mask[y * width + x] = 255;
+    while (head < tail) {
+      const linear = queueBuf[head++];
+      const x = linear % width;
+      const y = (linear - x) / width;
+      mask[linear] = 255;
       for (const [nx, ny] of [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]] as [number, number][]) {
         if (nx >= 0 && nx < width && ny >= 0 && ny < height && !visited[ny * width + nx]) {
           const nIdx = (ny * width + nx) * 4;
           if (isNearWhite(nIdx)) {
             visited[ny * width + nx] = 1;
-            queue.push([nx, ny]);
+            enqueue(nx, ny);
           }
         }
       }

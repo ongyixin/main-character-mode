@@ -28,36 +28,40 @@ function useMusicAudio(
   enabled: boolean
 ) {
   const activeAudioRef = useRef<HTMLAudioElement | null>(null);
-  const fadingAudioRef = useRef<HTMLAudioElement | null>(null);
-  const fadeTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const activeFadeRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const outFadeRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const clearFadeTimer = () => {
-    if (fadeTimerRef.current) {
-      clearInterval(fadeTimerRef.current);
-      fadeTimerRef.current = null;
-    }
+  const clearTimer = (ref: React.MutableRefObject<ReturnType<typeof setInterval> | null>) => {
+    if (ref.current) { clearInterval(ref.current); ref.current = null; }
   };
 
-  const rampVolume = useCallback(
-    (el: HTMLAudioElement, targetVol: number, durationMs: number) => {
-      clearFadeTimer();
+  const fadeAudio = useCallback(
+    (
+      el: HTMLAudioElement,
+      targetVol: number,
+      durationMs: number,
+      timerRef: React.MutableRefObject<ReturnType<typeof setInterval> | null>,
+      onDone?: () => void
+    ) => {
+      clearTimer(timerRef);
       const startVol = el.volume;
       const steps = 20;
       const stepMs = durationMs / steps;
       const delta = (targetVol - startVol) / steps;
       let step = 0;
 
-      fadeTimerRef.current = setInterval(() => {
+      timerRef.current = setInterval(() => {
         step++;
         el.volume = Math.min(1, Math.max(0, startVol + delta * step));
         if (step >= steps) {
           el.volume = targetVol;
-          clearFadeTimer();
+          clearTimer(timerRef);
           if (targetVol === 0) { el.pause(); el.src = ""; }
+          onDone?.();
         }
       }, stepMs);
     },
-    []
+    [] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   useEffect(() => {
@@ -67,20 +71,32 @@ function useMusicAudio(
     nextAudio.loop = true;
     nextAudio.volume = 0;
     activeAudioRef.current = nextAudio;
+
+    const startNext = () => {
+      nextAudio.play().then(() => {
+        fadeAudio(nextAudio, Math.min(0.75, intensity), 1000, activeFadeRef);
+      }).catch(() => {});
+    };
+
     if (prevAudio && !prevAudio.paused) {
-      fadingAudioRef.current = prevAudio;
-      rampVolume(prevAudio, 0, 1500);
+      // Fade out the old track fully, then start the new one
+      clearTimer(activeFadeRef);
+      fadeAudio(prevAudio, 0, 800, outFadeRef, startNext);
+    } else {
+      startNext();
     }
-    nextAudio.play().then(() => {
-      rampVolume(nextAudio, Math.min(0.75, intensity), 1500);
-    }).catch(() => {});
-    return () => { clearFadeTimer(); rampVolume(nextAudio, 0, 800); };
+
+    return () => {
+      clearTimer(activeFadeRef);
+      clearTimer(outFadeRef);
+      fadeAudio(nextAudio, 0, 600, outFadeRef);
+    };
   }, [trackUrl, enabled]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!enabled || !activeAudioRef.current) return;
-    rampVolume(activeAudioRef.current, Math.min(0.75, intensity), 600);
-  }, [intensity, enabled, rampVolume]);
+    fadeAudio(activeAudioRef.current, Math.min(0.75, intensity), 600, activeFadeRef);
+  }, [intensity, enabled, fadeAudio]);
 }
 
 export function MusicIndicator({ state, mode, enableAudio = false, className }: MusicIndicatorProps) {

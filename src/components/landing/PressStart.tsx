@@ -9,9 +9,10 @@ interface PressStartProps {
 export default function PressStart({ onStart }: PressStartProps) {
   return (
     <motion.div
+      role="button"
       onClick={onStart}
       className="absolute inset-0"
-      style={{ zIndex: 15, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", paddingBottom: "18%" }}
+      style={{ zIndex: 15, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", paddingBottom: "18%" }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}

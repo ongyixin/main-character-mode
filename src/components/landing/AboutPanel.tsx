@@ -3,7 +3,8 @@
 import { motion } from "framer-motion";
 
 const TECH_STACK = [
-  { label: "GEMINI 2.0 FLASH", color: "#3B4CCA", desc: "Scene perception, narrative & NPC generation" },
+  { label: "OVERSHOOT",        color: "#34d399", desc: "Live scene analysis & gesture detection on video — Qwen 3.5 VLM, 200ms results" },
+  { label: "GEMINI 2.5 FLASH", color: "#3B4CCA", desc: "Dialogue, personification, narration & mission generation" },
   { label: "LYRIA",            color: "#B0C4FF", desc: "Real-time adaptive soundtrack generation" },
   { label: "NANOBANANA",       color: "#FFDE00", desc: "Visual asset & poster synthesis" },
   { label: "NEXT.JS 16",       color: "#5B6CDA", desc: "Web application runtime" },
@@ -49,7 +50,7 @@ export default function AboutPanel() {
             Main Character Mode is a real-time AI engine that turns your physical surroundings into a living, procedurally generated game.
           </p>
           <p className="font-vt" style={{ fontSize: 16, color: "rgba(240,200,255,0.40)", lineHeight: 1.5, marginTop: 8 }}>
-            Point your camera at the world and watch it reframe itself — objects become characters, tasks become missions, and your environment becomes a stage.
+            Overshoot streams your camera to a vision model continuously — objects are detected as they appear, gestures are read in real time, and your environment becomes a stage.
           </p>
         </div>
       </div>

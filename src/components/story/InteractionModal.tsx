@@ -307,6 +307,7 @@ export function InteractionModal({
   const [sending, setSending] = useState(false);
   const [suggestingMessage, setSuggestingMessage] = useState(false);
   const [localResult, setLocalResult] = useState<TalkResult | null>(resolvedLastResult ?? null);
+  const [savedFlash, setSavedFlash] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   /** Locally merged portraits — starts from character.portraits, updated when expressions API returns */
   const [localPortraits, setLocalPortraits] = useState<Partial<Record<CharacterExpression, string>>>(
@@ -593,18 +594,32 @@ export function InteractionModal({
               {/* Save character */}
               {onSave && (
                 <motion.button
-                  onClick={() => onSave(character)}
+                  onClick={() => {
+                    // Merge latest talk result into the character before saving
+                    const latestChar: typeof character = localResult
+                      ? {
+                          ...character,
+                          relationshipToUser: localResult.newRelationshipToUser,
+                          emotionalState: localResult.emotionalStateUpdate ?? character.emotionalState,
+                        }
+                      : character;
+                    onSave(latestChar);
+                    setSavedFlash(true);
+                    setTimeout(() => setSavedFlash(false), 1800);
+                  }}
                   className="font-pixel text-[10px] px-1.5 py-0 touch-target"
                   style={{
-                    border: "1px solid rgba(255,222,0,0.35)",
-                    color: "rgba(255,222,0,0.5)",
-                    background: "rgba(0,0,0,0.3)",
+                    border: `1px solid ${savedFlash ? "rgba(80,255,120,0.7)" : "rgba(255,222,0,0.35)"}`,
+                    color: savedFlash ? "rgba(80,255,120,0.9)" : "rgba(255,222,0,0.5)",
+                    background: savedFlash ? "rgba(80,255,120,0.12)" : "rgba(0,0,0,0.3)",
+                    transition: "all 0.2s",
+                    minWidth: 36,
                   }}
                   whileTap={{ scale: 0.9 }}
                   aria-label="Save character"
                   title="Save to collection"
                 >
-                  💾
+                  {savedFlash ? "✓" : "💾"}
                 </motion.button>
               )}
 

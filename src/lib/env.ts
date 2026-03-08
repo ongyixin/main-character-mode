@@ -4,6 +4,10 @@
  */
 
 export const env = {
+  // Overshoot — real-time VLM on live video (scene analysis + gesture detection)
+  // NEXT_PUBLIC_ prefix makes it available in the browser bundle.
+  OVERSHOOT_API_KEY: process.env.NEXT_PUBLIC_OVERSHOOT_API_KEY ?? "",
+
   // Gemini 2.0 Flash
   GEMINI_API_KEY: process.env.GEMINI_API_KEY ?? "",
 
@@ -27,6 +31,7 @@ export const env = {
 
 /** Returns true if a given API is configured */
 export const isApiAvailable = {
+  overshoot: () => env.OVERSHOOT_API_KEY.length > 0,
   gemini: () => env.GEMINI_API_KEY.length > 0,
   lyria: () =>
     env.LYRIA_PROJECT_ID.length > 0 &&

@@ -91,7 +91,8 @@ function FlipCard({
 
   return (
     <div
-      style={{ perspective: 1600, height, cursor: "pointer" }}
+      role="button"
+      style={{ perspective: 1600, height }}
       onClick={() => setClicked((c) => !c)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}

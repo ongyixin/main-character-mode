@@ -1,6 +1,4 @@
 "use client";
-// Camera component — getUserMedia, desktop camera, periodic frame capture
-// Shared by Story Mode (object detection) and Quest Mode (context detection)
 
 import {
   useEffect,
@@ -24,12 +22,14 @@ export interface CameraProps {
   mode?: "story" | "quest";
   /** Current scan lifecycle state (controlled externally) */
   scanState?: ScanState;
-  /** Called with base64 JPEG on each periodic capture */
-  onFrame?: (base64: string) => void;
-  /** Called when camera initialization fails */
+  /**
+   * Optional external MediaStream from Overshoot (or any other source).
+   * When provided the component skips its own getUserMedia call and renders
+   * the supplied stream directly — avoids opening the camera a second time.
+   */
+  externalStream?: MediaStream | null;
+  /** Called when camera initialization fails (only relevant when no externalStream) */
   onError?: (error: Error) => void;
-  /** Capture interval in ms. Default 4000. */
-  scanInterval?: number;
   /** Overlay children rendered on top of camera feed */
   children?: React.ReactNode;
   className?: string;
@@ -41,11 +41,10 @@ export interface CameraProps {
 
 const Camera = forwardRef<CameraHandle, CameraProps>(function Camera(
   {
-    mode = "story",
+    mode: _mode = "story",
     scanState: _scanState,
-    onFrame,
+    externalStream,
     onError,
-    scanInterval = 4000,
     children,
     className = "",
     asBackground = false,
@@ -59,7 +58,7 @@ const Camera = forwardRef<CameraHandle, CameraProps>(function Camera(
   const [ready, setReady] = useState(false);
   const [permissionDenied, setPermissionDenied] = useState(false);
 
-  /** Capture current video frame as base64 JPEG */
+  /** Capture current video frame as raw base64 JPEG (no data-URI prefix) */
   const captureFrame = useCallback((): string | null => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -75,22 +74,37 @@ const Camera = forwardRef<CameraHandle, CameraProps>(function Camera(
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     const dataUrl = canvas.toDataURL("image/jpeg", 0.6);
-    // Strip the data URI prefix so callers get raw base64
     return dataUrl.split(",")[1] ?? null;
   }, [ready]);
 
-  // Expose captureFrame to parent via ref
   useImperativeHandle(ref, () => ({ captureFrame }), [captureFrame]);
 
-  // Start camera on mount
+  // ── External stream path ────────────────────────────────────────────────────
   useEffect(() => {
+    if (externalStream === undefined) return; // handled by getUserMedia path below
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (externalStream) {
+      video.srcObject = externalStream;
+      video.play().catch(() => {});
+      setReady(true);
+    } else {
+      video.srcObject = null;
+      setReady(false);
+    }
+  }, [externalStream]);
+
+  // ── Own getUserMedia path (used when no externalStream prop is provided) ────
+  useEffect(() => {
+    if (externalStream !== undefined) return; // external stream takes over
+
     let active = true;
 
     async function startCamera() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
-            // "user" is the desktop webcam / front-facing camera
             facingMode: { ideal: "user" },
             width: { ideal: 1280 },
             height: { ideal: 720 },
@@ -123,23 +137,11 @@ const Camera = forwardRef<CameraHandle, CameraProps>(function Camera(
       streamRef.current?.getTracks().forEach((t) => t.stop());
       setReady(false);
     };
-  }, [onError]);
-
-  // Periodic frame capture
-  useEffect(() => {
-    if (!ready || !onFrame) return;
-    const id = setInterval(() => {
-      const frame = captureFrame();
-      if (frame) onFrame(frame);
-    }, scanInterval);
-    return () => clearInterval(id);
-  }, [ready, onFrame, captureFrame, scanInterval]);
+  }, [externalStream, onError]);
 
   if (permissionDenied) {
     return (
-      <div
-        className={`flex items-center justify-center bg-black text-white/60 ${className}`}
-      >
+      <div className={`flex items-center justify-center bg-black text-white/60 ${className}`}>
         <div className="text-center px-8">
           <p className="text-base mb-2">Camera access denied</p>
           <p className="text-base text-white/40">
@@ -151,7 +153,9 @@ const Camera = forwardRef<CameraHandle, CameraProps>(function Camera(
   }
 
   return (
-    <div className={`relative overflow-hidden ${asBackground ? "absolute inset-0 z-0" : ""} ${className}`}>
+    <div
+      className={`relative overflow-hidden ${asBackground ? "absolute inset-0 z-0" : ""} ${className}`}
+    >
       <canvas ref={canvasRef} className="hidden" />
       <video
         ref={videoRef}

@@ -9,8 +9,8 @@ import { MusicIndicator } from "@/components/shared/MusicIndicator";
 import NarrationBanner from "@/components/shared/NarrationBanner";
 import { Camera, type CameraHandle } from "@/components/shared/Camera";
 import { GestureOverlay } from "@/components/shared/GestureOverlay";
-import { useFrontCamera } from "@/hooks/useFrontCamera";
-import { useGestureDetection } from "@/hooks/useGestureDetection";
+import { useOvershootScene } from "@/hooks/useOvershootScene";
+import { useOvershootGestures } from "@/hooks/useOvershootGestures";
 import { MOCK_STORY_SESSION } from "@/lib/mock-data";
 import { DEMO_MODE } from "@/lib/constants";
 import { DEMO_CHARACTER, DEMO_SCENE_OBJECT } from "@/lib/demo/demo-data";
@@ -73,12 +73,10 @@ function StoryContent() {
   const [speakingVoiceState, setSpeakingVoiceState] = useState<VoiceState>("idle");
   const cameraRef = useRef<CameraHandle>(null);
 
-  // ── Front camera + gesture detection ────────────────────────────────────────
-  const frontCamera = useFrontCamera();
-  const { gesture, isReady: gestureReady, modelError: gestureError } = useGestureDetection(
-    frontCamera.videoRef,
-    true
-  );
+  // ── Overshoot: continuous scene analysis + gesture detection ─────────────────
+  const overshootScene = useOvershootScene("story", genre);
+  const { gesture, mediaStream: gestureStream, isReady: gestureReady, error: gestureError } =
+    useOvershootGestures(!DEMO_MODE);
 
   // ── Session initialization ──────────────────────────────────────────────────
   useEffect(() => {
@@ -260,12 +258,20 @@ function StoryContent() {
     }
     if (!sessionId || scanLoading) return;
     setScanLoading(true);
-    const frame = cameraRef.current?.captureFrame() ?? "";
+
+    // Prefer the live Overshoot scene graph (no frame needed).
+    // Fall back to a captured frame if Overshoot hasn't produced a result yet.
+    const overshootGraph = overshootScene.latestSceneGraph;
+    const fallbackFrame = overshootGraph ? undefined : (cameraRef.current?.captureFrame() ?? "");
+
     try {
       const res = await fetch("/api/scan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, frame } as ScanRequest),
+        body: JSON.stringify({
+          sessionId,
+          ...(overshootGraph ? { sceneGraph: overshootGraph } : { frame: fallbackFrame }),
+        } as ScanRequest),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: ScanResponse = await res.json();
@@ -288,7 +294,7 @@ function StoryContent() {
       // scan returns immediately without portraits so the user can interact now.
       const newCharacterIds = data.storyHooks?.newCharacters ?? [];
       for (const cid of newCharacterIds) {
-        fetchPortraitInBackground(cid, frame || undefined);
+        fetchPortraitInBackground(cid, fallbackFrame || undefined);
       }
       await fetchMusic();
     } catch (err) {
@@ -296,7 +302,7 @@ function StoryContent() {
     } finally {
       setScanLoading(false);
     }
-  }, [sessionId, scanLoading, fetchMusic, fetchPortraitInBackground]);
+  }, [sessionId, scanLoading, fetchMusic, fetchPortraitInBackground, overshootScene]);
 
   // ── Save character to collection ────────────────────────────────────────────
   const handleSaveCharacter = useCallback(
@@ -335,7 +341,8 @@ function StoryContent() {
       if (!sessionId || !selectedCharacter) return null;
       try {
         // Capture a selfie frame at the moment of talking so Gemini can see the user.
-        const selfieFrame = frontCamera.captureFrame();
+        // We reuse the main camera (Overshoot scene stream) for the selfie.
+        const selfieFrame = cameraRef.current?.captureFrame() ?? null;
 
         const talkBody: TalkRequest = {
           sessionId,
@@ -392,7 +399,7 @@ function StoryContent() {
         return null;
       }
     },
-    [sessionId, selectedCharacter, fetchMusic, gesture, frontCamera]
+    [sessionId, selectedCharacter, fetchMusic, gesture, cameraRef]
   );
 
   // ── Loading state ───────────────────────────────────────────────────────────
@@ -426,12 +433,13 @@ function StoryContent() {
       className="relative h-full w-full overflow-hidden"
       style={{ background: "var(--story-bg)" }}
     >
-      {/* Layer 0: Camera feed */}
+      {/* Layer 0: Camera feed — display uses the Overshoot scene stream */}
       <div className="absolute inset-0 z-0">
         <Camera
           ref={cameraRef}
           className="w-full h-full object-cover opacity-35"
           mode="story"
+          externalStream={overshootScene.mediaStream}
         />
       </div>
 
@@ -470,17 +478,12 @@ function StoryContent() {
         );
       })}
 
-      {/* Hidden front camera elements (needed by useFrontCamera + useGestureDetection) */}
-      <video ref={frontCamera.videoRef} playsInline muted style={{ display: "none" }} />
-      <canvas ref={frontCamera.canvasRef} style={{ display: "none" }} />
-
-      {/* Layer 2.5: Gesture overlay PiP */}
+      {/* Layer 2.5: Gesture overlay PiP — stream comes from Overshoot gesture hook */}
       <GestureOverlay
-        videoRef={frontCamera.videoRef}
-        canvasRef={frontCamera.canvasRef}
+        stream={gestureStream}
         gesture={gesture}
         isReady={gestureReady}
-        modelError={gestureError}
+        modelError={gestureError ?? null}
       />
 
       {/* Layer 3: StoryHUD */}

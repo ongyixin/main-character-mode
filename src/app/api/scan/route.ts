@@ -121,12 +121,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
     }
 
-    const prompt = sceneAnalysisPrompt(session.activeMode, session.storyState?.genre);
     let sceneGraph: SceneGraph;
 
-    const result = await safeAnalyzeImageJSON<SceneGraph>(body.frame, prompt);
-    if (result) {
-      sceneGraph = { ...result, capturedAt: Date.now() };
+    if (body.sceneGraph) {
+      // Fast path: Overshoot already analyzed the scene client-side — skip the VLM call.
+      sceneGraph = { ...body.sceneGraph, capturedAt: body.sceneGraph.capturedAt ?? Date.now() };
+    } else if (body.frame) {
+      // Fallback: server-side Gemini analysis (used when Overshoot is not configured).
+      const prompt = sceneAnalysisPrompt(session.activeMode, session.storyState?.genre);
+      const result = await safeAnalyzeImageJSON<SceneGraph>(body.frame, prompt);
+      sceneGraph = result
+        ? { ...result, capturedAt: Date.now() }
+        : { ...session.sceneGraph, capturedAt: Date.now() };
     } else {
       sceneGraph = { ...session.sceneGraph, capturedAt: Date.now() };
     }
