@@ -653,6 +653,109 @@ html, body {
 }
 .ghost-btn:hover { color: var(--red); }
 
+/* ─── Group chat header ──────────────────────────────────────────────────── */
+
+.group-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(40, 10, 80, 0.6);
+  border-bottom: 1px solid rgba(255, 222, 0, 0.3);
+  flex-shrink: 0;
+}
+
+.group-portraits {
+  display: flex;
+  gap: -4px; /* overlapping */
+}
+
+.group-portrait-mini {
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--bg-0);
+  border-radius: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-left: -6px;
+}
+
+.group-portrait-mini:first-child { margin-left: 0; }
+
+.group-portrait-mini img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: var(--bg-1);
+}
+
+.group-header-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.group-title {
+  font-size: 11px;
+  color: var(--yellow);
+  letter-spacing: 0.18em;
+  font-weight: bold;
+}
+
+.group-members-label {
+  font-size: 10px;
+  color: var(--white-30);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.04em;
+}
+
+/* ─── Group messages ─────────────────────────────────────────────────────── */
+
+.msg-group-char {
+  align-self: flex-start;
+  align-items: flex-start;
+  max-width: 92%;
+}
+
+.msg-group-char .msg-bubble {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 240, 176, 0.9);
+  border-left-width: 2px;
+}
+
+.msg-speaker-label {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  margin-bottom: 3px;
+  font-weight: bold;
+}
+
+/* ─── Group typing indicator ─────────────────────────────────────────────── */
+
+.group-typing-name {
+  font-size: 10px;
+  color: var(--yellow-dim);
+  letter-spacing: 0.08em;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+/* ─── Group round note ───────────────────────────────────────────────────── */
+
+.group-round-note {
+  font-size: 9px;
+  color: var(--white-30);
+  letter-spacing: 0.06em;
+  font-style: italic;
+}
+
 /* ─── Proactive comment animation ────────────────────────────────────────── */
 
 @keyframes fadeSlideIn {

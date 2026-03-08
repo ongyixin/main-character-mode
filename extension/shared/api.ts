@@ -5,6 +5,7 @@ import type {
   SavedCharacter,
   InteractionMode,
   BrowserContext,
+  GroupContext,
   RecallRequest,
   RecallResponse,
   SuggestResponse,
@@ -47,6 +48,43 @@ export async function recallChat(
   if (!res.ok) {
     const text = await res.text().catch(() => "Unknown error");
     throw new Error(`/api/recall failed (${res.status}): ${text}`);
+  }
+
+  return res.json() as Promise<RecallResponse>;
+}
+
+// ─── /api/recall (group variant) ─────────────────────────────────────────────
+
+/**
+ * Like recallChat, but adds groupContext so the character knows who else is in
+ * the conversation and what they've already said in this round.
+ */
+export async function groupRecallChat(
+  character: SavedCharacter,
+  mode: InteractionMode,
+  userMessage: string,
+  groupContext: GroupContext,
+  browserContext?: BrowserContext
+): Promise<RecallResponse> {
+  const baseUrl = await getBaseUrl();
+
+  const body: RecallRequest = {
+    character,
+    interactionMode: mode,
+    message: userMessage,
+    groupContext,
+    ...(browserContext ? { browserContext } : {}),
+  };
+
+  const res = await fetch(`${baseUrl}/api/recall`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "Unknown error");
+    throw new Error(`/api/recall (group) failed (${res.status}): ${text}`);
   }
 
   return res.json() as Promise<RecallResponse>;

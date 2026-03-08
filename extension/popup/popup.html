@@ -58,6 +58,7 @@
       <div class="section-label">
         YOUR CHARACTERS
         <span id="char-count" class="dim"></span>
+        <button id="btn-group-toggle" class="group-toggle-btn">♦ GROUP</button>
       </div>
 
       <div id="char-list" class="char-list">
@@ -68,6 +69,12 @@
         <div class="empty-icon">📖</div>
         <p class="empty-text">No characters imported yet.</p>
         <p class="empty-sub">Open the app, save a character, then come back and tap Import.</p>
+      </div>
+
+      <!-- Group action bar — visible only in multi-select mode with 2+ selected -->
+      <div id="group-action-bar" class="group-action-bar hidden">
+        <span id="group-selected-label" class="group-selected-label">0 SELECTED</span>
+        <button id="btn-start-group" class="group-start-btn" disabled>START GROUP CHAT</button>
       </div>
     </section>
 

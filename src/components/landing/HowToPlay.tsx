@@ -202,7 +202,7 @@ export default function HowToPlay() {
                   </p>
                   <div
                     className="font-pixel"
-                    style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "0.1em", marginTop: 6 }}
+                    style={{ fontSize: 16, color: "rgba(255,255,255,0.2)", letterSpacing: "0.1em", marginTop: 6 }}
                   >
                     ↺ TAP FOR DETAILS
                   </div>
@@ -222,7 +222,7 @@ export default function HowToPlay() {
                 >
                   <div
                     className="font-pixel"
-                    style={{ fontSize: 15, color: mode.color, letterSpacing: "0.1em", marginBottom: 10 }}
+                    style={{ fontSize: 16, color: mode.color, letterSpacing: "0.1em", marginBottom: 10 }}
                   >
                     {mode.name}
                   </div>
@@ -239,7 +239,7 @@ export default function HowToPlay() {
                   </div>
                   <div
                     className="font-pixel"
-                    style={{ fontSize: 11, color: mode.color, letterSpacing: "0.12em", marginTop: 8 }}
+                    style={{ fontSize: 16, color: mode.color, letterSpacing: "0.12em", marginTop: 8 }}
                   >
                     {mode.tagline}
                   </div>
@@ -306,7 +306,7 @@ export default function HowToPlay() {
                     </div>
                     <div
                       className="font-pixel"
-                      style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "0.1em" }}
+                      style={{ fontSize: 16, color: "rgba(255,255,255,0.2)", letterSpacing: "0.1em" }}
                     >
                       ↺ TAP TO FLIP
                     </div>
@@ -348,7 +348,7 @@ export default function HowToPlay() {
                     <div
                       className="font-pixel"
                       style={{
-                        fontSize: 13,
+                        fontSize: 16,
                         color: "rgba(255,222,0,0.5)",
                         letterSpacing: "0.1em",
                         padding: "3px 6px",

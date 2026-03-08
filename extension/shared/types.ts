@@ -86,6 +86,52 @@ export const DEFAULT_SETTINGS: ExtensionSettings = {
   trackActivity: true,
 };
 
+// ─── Group chat ───────────────────────────────────────────────────────────────
+
+/** Color assigned to a character in the group chat UI. */
+export const GROUP_COLORS = ["#FF80C0", "#80D4FF", "#FFDE00", "#80FF9A"] as const;
+
+export interface GroupMember {
+  character: SavedCharacter;
+  /** Hex color for this member's label + bubble accent in the group chat feed. */
+  color: string;
+}
+
+export interface GroupChatMessage {
+  id: string;
+  role: "user" | "character";
+  speakerName: string;
+  speakerCharacterId?: string;
+  /** The color of the speaking character (undefined for user messages). */
+  speakerColor?: string;
+  text: string;
+  timestamp: number;
+  interactionMode?: InteractionMode;
+}
+
+export interface GroupChatSession {
+  members: GroupMember[];
+  messages: GroupChatMessage[];
+  createdAt: number;
+}
+
+/**
+ * Group context injected into each character's /api/recall call so they can
+ * respond to each other as well as the user.
+ */
+export interface GroupContext {
+  otherCharacters: Array<{
+    name: string;
+    personality: string;
+    emotionalState: string;
+  }>;
+  /** Last N messages from the group conversation (for in-turn context). */
+  recentMessages: Array<{
+    speakerName: string;
+    text: string;
+  }>;
+}
+
 // ─── Message types (extension internal messaging) ────────────────────────────
 
 export type ExtensionMessage =
@@ -94,6 +140,7 @@ export type ExtensionMessage =
   | { type: "IMPORT_FAILED"; reason: string }
   | { type: "SET_ACTIVE_CHARACTER"; characterId: string }
   | { type: "OPEN_SIDE_PANEL" }
+  | { type: "START_GROUP_CHAT"; characters: SavedCharacter[] }
   | { type: "CONTEXT_MENU_QUERY"; selectedText: string; sourceUrl: string; sourceTitle: string }
   | { type: "TAB_CHANGED"; entry: ActivityEntry };
 
@@ -104,6 +151,7 @@ export interface RecallRequest {
   interactionMode: InteractionMode;
   message: string;
   browserContext?: BrowserContext;
+  groupContext?: GroupContext;
 }
 
 export interface RecallResponse {

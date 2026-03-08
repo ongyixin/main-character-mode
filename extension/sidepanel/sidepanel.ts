@@ -11,15 +11,24 @@ import {
   clearChatHistory,
   updateCharacter,
   getSettings,
+  getPendingGroup,
+  clearPendingGroup,
+  getGroupSession,
+  saveGroupSession,
+  clearGroupSession,
 } from "../shared/storage.js";
-import { recallChat, fetchSuggestion } from "../shared/api.js";
+import { recallChat, fetchSuggestion, groupRecallChat } from "../shared/api.js";
 import type {
   SavedCharacter,
   InteractionMode,
   ChatMessage,
   ChatHistory,
   BrowserContext,
+  GroupMember,
+  GroupChatMessage,
+  GroupChatSession,
 } from "../shared/types.js";
+import { GROUP_COLORS } from "../shared/types.js";
 
 // ─── Relationship helpers ─────────────────────────────────────────────────────
 
@@ -61,6 +70,7 @@ function getPortraitTheme(personality: string) {
 
 const screenEmpty       = document.getElementById("screen-empty") as HTMLElement;
 const screenChat        = document.getElementById("screen-chat") as HTMLElement;
+const screenGroup       = document.getElementById("screen-group") as HTMLElement;
 const charPortrait      = document.getElementById("char-portrait") as HTMLElement;
 const charName          = document.getElementById("char-name") as HTMLElement;
 const charLabel         = document.getElementById("char-label") as HTMLElement;
@@ -94,11 +104,15 @@ let currentMode: InteractionMode = "befriend";
 let pendingContextQuery: { selectedText: string; sourceUrl: string; sourceTitle: string } | null = null;
 let currentTab: { url: string; title: string } | null = null;
 
+// ─── Group chat state ─────────────────────────────────────────────────────────
+
+let groupSession: GroupChatSession | null = null;
+let groupMode: InteractionMode = "befriend";
+let groupSending = false;
+
 // ─── Init ──────────────────────────────────────────────────────────────────────
 
 async function init() {
-  const character = await getActiveCharacter();
-
   // Get the current active tab for context
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true }).catch(() => []);
   if (tabs[0]?.url && tabs[0]?.title) {
@@ -108,6 +122,28 @@ async function init() {
     }
   }
 
+  // Check if the popup left a pending group to start
+  const pending = await getPendingGroup();
+  if (pending && pending.length >= 2) {
+    await clearPendingGroup();
+    const members: GroupMember[] = pending.map((char, i) => ({
+      character: char,
+      color: GROUP_COLORS[i % GROUP_COLORS.length],
+    }));
+    await startGroupChat(members);
+    return;
+  }
+
+  // Check if there's an active group session already
+  const existingGroup = await getGroupSession();
+  if (existingGroup) {
+    groupSession = existingGroup;
+    renderGroupScreen(existingGroup);
+    showScreen("group");
+    return;
+  }
+
+  const character = await getActiveCharacter();
   if (!character) {
     showScreen("empty");
     return;
@@ -134,9 +170,10 @@ async function loadCharacter(character: SavedCharacter) {
 
 // ─── Screen management ────────────────────────────────────────────────────────
 
-function showScreen(screen: "empty" | "chat") {
+function showScreen(screen: "empty" | "chat" | "group") {
   screenEmpty.classList.toggle("hidden", screen !== "empty");
   screenChat.classList.toggle("hidden", screen !== "chat");
+  screenGroup.classList.toggle("hidden", screen !== "group");
 }
 
 // ─── Header rendering ─────────────────────────────────────────────────────────
@@ -543,6 +580,286 @@ btnClearHistory.addEventListener("click", async () => {
   chatMessages.innerHTML = "";
 });
 
+// ─── Group chat ───────────────────────────────────────────────────────────────
+
+const groupPortraits        = document.getElementById("group-portraits") as HTMLElement;
+const groupMembersLabel     = document.getElementById("group-members-label") as HTMLElement;
+const groupChatMessages     = document.getElementById("group-chat-messages") as HTMLElement;
+const groupTypingIndicator  = document.getElementById("group-typing-indicator") as HTMLElement;
+const groupTypingName       = document.getElementById("group-typing-name") as HTMLElement;
+const groupInputMessage     = document.getElementById("group-input-message") as HTMLTextAreaElement;
+const groupBtnSend          = document.getElementById("group-btn-send") as HTMLButtonElement;
+const groupBtnClear         = document.getElementById("group-btn-clear") as HTMLButtonElement;
+const btnLeaveGroup         = document.getElementById("btn-leave-group") as HTMLButtonElement;
+const groupModeSelector     = document.getElementById("group-mode-selector") as HTMLElement;
+
+groupModeSelector.querySelectorAll<HTMLButtonElement>(".mode-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    groupModeSelector.querySelectorAll(".mode-btn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    groupMode = btn.dataset.mode as InteractionMode;
+  });
+});
+
+async function startGroupChat(members: GroupMember[]) {
+  // Re-use an existing session if the member set is the same, otherwise start fresh
+  const existing = await getGroupSession();
+  const memberIds = members.map((m) => m.character.id).sort().join(",");
+  const existingIds = existing?.members.map((m) => m.character.id).sort().join(",");
+
+  if (existing && memberIds === existingIds) {
+    groupSession = existing;
+  } else {
+    groupSession = {
+      members,
+      messages: [],
+      createdAt: Date.now(),
+    };
+    await saveGroupSession(groupSession);
+  }
+
+  renderGroupScreen(groupSession);
+  showScreen("group");
+}
+
+function renderGroupScreen(session: GroupChatSession) {
+  // Header portraits
+  groupPortraits.innerHTML = "";
+  for (const member of session.members) {
+    const theme = getPortraitTheme(member.character.personality);
+    const mini = document.createElement("div");
+    mini.className = "group-portrait-mini";
+    mini.style.background = theme.gradient;
+    mini.style.borderColor = member.color;
+    if (member.character.portraitUrl) {
+      mini.innerHTML = `<img src="${escapeHtml(member.character.portraitUrl)}" alt="" />`;
+    } else {
+      mini.textContent = theme.emoji;
+    }
+    groupPortraits.appendChild(mini);
+  }
+
+  // Member names line
+  groupMembersLabel.textContent = session.members.map((m) => m.character.name).join(" · ");
+
+  // Render history
+  groupChatMessages.innerHTML = "";
+  for (const msg of session.messages) {
+    appendGroupMessageToDOM(msg, false);
+  }
+  groupScrollToBottom();
+}
+
+function appendGroupMessageToDOM(msg: GroupChatMessage, animate = true) {
+  const wrapper = document.createElement("div");
+
+  if (msg.role === "user") {
+    wrapper.className = "msg msg-user";
+    const bubble = document.createElement("div");
+    bubble.className = "msg-bubble";
+    bubble.textContent = msg.text;
+    wrapper.appendChild(bubble);
+    const meta = document.createElement("div");
+    meta.className = "msg-meta";
+    const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    meta.appendChild(Object.assign(document.createElement("span"), { textContent: time }));
+    wrapper.appendChild(meta);
+  } else {
+    wrapper.className = "msg msg-group-char";
+    const label = document.createElement("div");
+    label.className = "msg-speaker-label";
+    label.textContent = msg.speakerName;
+    label.style.color = msg.speakerColor ?? "#FF80C0";
+    wrapper.appendChild(label);
+    const bubble = document.createElement("div");
+    bubble.className = "msg-bubble";
+    bubble.style.borderLeftColor = msg.speakerColor ?? "#FF80C0";
+    bubble.textContent = msg.text;
+    wrapper.appendChild(bubble);
+    const meta = document.createElement("div");
+    meta.className = "msg-meta";
+    const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    meta.appendChild(Object.assign(document.createElement("span"), { textContent: time }));
+    wrapper.appendChild(meta);
+  }
+
+  groupChatMessages.appendChild(wrapper);
+  if (animate) groupScrollToBottom();
+}
+
+/**
+ * Typewriter effect for group character messages.
+ * Returns the wrapper element so meta row can be appended after.
+ */
+async function groupTypewriterAppend(
+  text: string,
+  speakerName: string,
+  speakerColor: string
+): Promise<HTMLElement> {
+  const wrapper = document.createElement("div");
+  wrapper.className = "msg msg-group-char";
+
+  const label = document.createElement("div");
+  label.className = "msg-speaker-label";
+  label.textContent = speakerName;
+  label.style.color = speakerColor;
+  wrapper.appendChild(label);
+
+  const bubble = document.createElement("div");
+  bubble.className = "msg-bubble";
+  bubble.style.borderLeftColor = speakerColor;
+
+  const cursor = document.createElement("span");
+  cursor.className = "cursor";
+  bubble.appendChild(cursor);
+  wrapper.appendChild(bubble);
+  groupChatMessages.appendChild(wrapper);
+  groupScrollToBottom();
+
+  const CHAR_DELAY_MS = 16;
+  for (let i = 0; i < text.length; i++) {
+    bubble.insertBefore(document.createTextNode(text[i]), cursor);
+    if (i % 3 === 0) groupScrollToBottom();
+    await sleep(CHAR_DELAY_MS);
+  }
+  cursor.remove();
+
+  return wrapper;
+}
+
+function groupScrollToBottom() {
+  groupChatMessages.scrollTop = groupChatMessages.scrollHeight;
+}
+
+async function sendGroupMessage(text: string) {
+  if (!groupSession || groupSending) return;
+  const trimmed = text.trim();
+  if (!trimmed) return;
+
+  groupSending = true;
+  groupInputMessage.value = "";
+  groupBtnSend.disabled = true;
+
+  const userMsg: GroupChatMessage = {
+    id: `gm_${Date.now()}_user`,
+    role: "user",
+    speakerName: "You",
+    text: trimmed,
+    timestamp: Date.now(),
+    interactionMode: groupMode,
+  };
+
+  groupSession.messages.push(userMsg);
+  appendGroupMessageToDOM(userMsg);
+
+  // Let each character respond in sequence
+  for (const member of groupSession.members) {
+    // Build the group context for this character: everyone else + recent messages
+    const otherMembers = groupSession.members
+      .filter((m) => m.character.id !== member.character.id)
+      .map((m) => ({
+        name: m.character.name,
+        personality: m.character.personality,
+        emotionalState: m.character.emotionalState,
+      }));
+
+    const recentMessages = groupSession.messages.slice(-12).map((m) => ({
+      speakerName: m.speakerName,
+      text: m.text,
+    }));
+
+    // Show typing indicator with this character's name
+    groupTypingName.textContent = member.character.name;
+    groupTypingName.style.color = member.color;
+    groupTypingIndicator.classList.remove("hidden");
+    groupScrollToBottom();
+
+    try {
+      const browserCtx = await buildBrowserContext();
+      const result = await groupRecallChat(
+        member.character,
+        groupMode,
+        trimmed,
+        { otherCharacters: otherMembers, recentMessages },
+        browserCtx
+      );
+
+      groupTypingIndicator.classList.add("hidden");
+
+      const wrapper = await groupTypewriterAppend(result.response, member.character.name, member.color);
+
+      // Append meta row
+      const meta = document.createElement("div");
+      meta.className = "msg-meta";
+      const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      meta.appendChild(Object.assign(document.createElement("span"), { textContent: time }));
+      wrapper.appendChild(meta);
+
+      const charMsg: GroupChatMessage = {
+        id: `gm_${Date.now()}_${member.character.id}`,
+        role: "character",
+        speakerName: member.character.name,
+        speakerCharacterId: member.character.id,
+        speakerColor: member.color,
+        text: result.response,
+        timestamp: Date.now(),
+        interactionMode: groupMode,
+      };
+      groupSession.messages.push(charMsg);
+
+      // Small pause so it feels like a natural conversation turn
+      await sleep(300);
+
+    } catch (err) {
+      groupTypingIndicator.classList.add("hidden");
+
+      const errMsg: GroupChatMessage = {
+        id: `gm_${Date.now()}_err`,
+        role: "character",
+        speakerName: member.character.name,
+        speakerColor: member.color,
+        text: `[Connection error: ${String(err)}]`,
+        timestamp: Date.now(),
+      };
+      groupSession.messages.push(errMsg);
+      appendGroupMessageToDOM(errMsg);
+    }
+  }
+
+  await saveGroupSession(groupSession);
+  groupSending = false;
+  groupBtnSend.disabled = false;
+  groupInputMessage.focus();
+}
+
+groupBtnSend.addEventListener("click", () => sendGroupMessage(groupInputMessage.value));
+
+groupInputMessage.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendGroupMessage(groupInputMessage.value);
+  }
+});
+
+groupBtnClear.addEventListener("click", async () => {
+  if (!groupSession) return;
+  groupSession.messages = [];
+  await saveGroupSession(groupSession);
+  groupChatMessages.innerHTML = "";
+});
+
+btnLeaveGroup.addEventListener("click", async () => {
+  // Keep the group session in storage (user can return), just switch to solo
+  groupSession = null;
+  await clearGroupSession();
+  const character = await getActiveCharacter();
+  if (character) {
+    await loadCharacter(character);
+  } else {
+    showScreen("empty");
+  }
+});
+
 // ─── Runtime message handling ─────────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -617,6 +934,17 @@ chrome.runtime.onMessage.addListener((message: any) => {
   // Active character changed from popup
   if (message.type === "SET_ACTIVE_CHARACTER") {
     init().catch(console.error);
+    return;
+  }
+
+  // Group chat initiated from popup while side panel was already open
+  if (message.type === "START_GROUP_CHAT") {
+    const characters = message.characters as SavedCharacter[];
+    const members: GroupMember[] = characters.map((char, i) => ({
+      character: char,
+      color: GROUP_COLORS[i % GROUP_COLORS.length],
+    }));
+    startGroupChat(members).catch(console.error);
     return;
   }
 });

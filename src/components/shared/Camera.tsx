@@ -1,5 +1,5 @@
 "use client";
-// Camera component — getUserMedia, rear camera, periodic frame capture
+// Camera component — getUserMedia, desktop camera, periodic frame capture
 // Shared by Story Mode (object detection) and Quest Mode (context detection)
 
 import {
@@ -90,9 +90,8 @@ const Camera = forwardRef<CameraHandle, CameraProps>(function Camera(
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
-            // "environment" is ideal for mobile rear camera but ignored gracefully
-            // on desktop where only one camera exists.
-            facingMode: { ideal: "environment" },
+            // "user" is the desktop webcam / front-facing camera
+            facingMode: { ideal: "user" },
             width: { ideal: 1280 },
             height: { ideal: 720 },
           },

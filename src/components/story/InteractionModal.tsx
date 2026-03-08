@@ -604,7 +604,7 @@ export function InteractionModal({
                   aria-label="Save character"
                   title="Save to collection"
                 >
-                  ★
+                  💾
                 </motion.button>
               )}
 

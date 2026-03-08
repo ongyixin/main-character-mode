@@ -338,6 +338,93 @@ html, body {
 }
 .char-card.active .active-pip { opacity: 1; }
 
+/* ─── Group toggle button ────────────────────────────────────────────────── */
+
+.group-toggle-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 222, 0, 0.2);
+  color: rgba(255, 222, 0, 0.4);
+  font-family: var(--font);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  padding: 2px 7px;
+  cursor: pointer;
+  transition: all 0.12s;
+  margin-left: auto;
+}
+.group-toggle-btn:hover,
+.group-toggle-btn.active {
+  border-color: var(--yellow);
+  color: var(--yellow);
+  background: var(--yellow-faint);
+}
+
+/* ─── Multi-select mode ──────────────────────────────────────────────────── */
+
+/* When group-select is active, cards show a selection ring */
+.char-card.group-selectable {
+  cursor: pointer;
+  position: relative;
+}
+
+.char-card.group-selectable::after {
+  content: '○';
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.25);
+  line-height: 1;
+}
+
+.char-card.group-selected {
+  border-color: var(--yellow) !important;
+  background: rgba(255, 222, 0, 0.06) !important;
+}
+
+.char-card.group-selected::after {
+  content: '●';
+  color: var(--yellow);
+}
+
+/* ─── Group action bar ───────────────────────────────────────────────────── */
+
+.group-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0 2px;
+  gap: 8px;
+}
+
+.group-action-bar.hidden { display: none !important; }
+
+.group-selected-label {
+  font-size: 9px;
+  color: var(--yellow);
+  letter-spacing: 0.12em;
+}
+
+.group-start-btn {
+  flex: 1;
+  padding: 7px 0;
+  background: var(--pink);
+  color: var(--yellow);
+  border: 2px solid #8B3060;
+  font-family: var(--font);
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--pink-dim);
+  transition: filter 0.1s;
+}
+.group-start-btn:hover:not(:disabled) { filter: brightness(1.1); }
+.group-start-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 /* ─── Empty state ────────────────────────────────────────────────────────── */
 
 .empty-state {

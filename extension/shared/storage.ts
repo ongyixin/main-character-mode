@@ -5,6 +5,7 @@ import type {
   ExtensionSettings,
   ActivityEntry,
   ChatHistory,
+  GroupChatSession,
 } from "./types.js";
 import { DEFAULT_SETTINGS } from "./types.js";
 
@@ -15,6 +16,8 @@ const KEYS = {
   SETTINGS: "mcm_ext_settings",
   ACTIVITY: "mcm_ext_activity",
   CHAT_PREFIX: "mcm_ext_chat_",
+  PENDING_GROUP: "mcm_ext_pending_group",
+  GROUP_SESSION: "mcm_ext_group_session",
 } as const;
 
 const MAX_ACTIVITY_ENTRIES = 50;
@@ -134,4 +137,43 @@ export async function saveChatHistory(history: ChatHistory): Promise<void> {
 
 export async function clearChatHistory(characterId: string): Promise<void> {
   await chrome.storage.local.remove(chatKey(characterId));
+}
+
+// ─── Group chat ────────────────────────────────────────────────────────────────
+
+const MAX_GROUP_MESSAGES = 60;
+
+/**
+ * Store the characters the user selected in the popup so the side panel can
+ * pick them up when it opens (popup closes before the side panel is ready).
+ */
+export async function setPendingGroup(characters: SavedCharacter[]): Promise<void> {
+  await chrome.storage.local.set({ [KEYS.PENDING_GROUP]: characters });
+}
+
+export async function getPendingGroup(): Promise<SavedCharacter[] | null> {
+  const r = await chrome.storage.local.get(KEYS.PENDING_GROUP);
+  return (r[KEYS.PENDING_GROUP] as SavedCharacter[]) ?? null;
+}
+
+export async function clearPendingGroup(): Promise<void> {
+  await chrome.storage.local.remove(KEYS.PENDING_GROUP);
+}
+
+/** Current active group session (only one at a time). */
+export async function getGroupSession(): Promise<GroupChatSession | null> {
+  const r = await chrome.storage.local.get(KEYS.GROUP_SESSION);
+  return (r[KEYS.GROUP_SESSION] as GroupChatSession) ?? null;
+}
+
+export async function saveGroupSession(session: GroupChatSession): Promise<void> {
+  const trimmed: GroupChatSession = {
+    ...session,
+    messages: session.messages.slice(-MAX_GROUP_MESSAGES),
+  };
+  await chrome.storage.local.set({ [KEYS.GROUP_SESSION]: trimmed });
+}
+
+export async function clearGroupSession(): Promise<void> {
+  await chrome.storage.local.remove(KEYS.GROUP_SESSION);
 }

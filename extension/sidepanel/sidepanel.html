@@ -112,6 +112,57 @@
       </footer>
     </div>
 
+    <!-- Group chat screen -->
+    <div id="screen-group" class="screen hidden">
+
+      <!-- Group header -->
+      <header class="group-header">
+        <div id="group-portraits" class="group-portraits">
+          <!-- Mini portrait row — populated by sidepanel.ts -->
+        </div>
+        <div class="group-header-info">
+          <div class="group-title">♦ GROUP CHAT</div>
+          <div id="group-members-label" class="group-members-label"></div>
+        </div>
+        <button id="btn-leave-group" class="ghost-btn" style="flex-shrink:0">← SOLO</button>
+      </header>
+
+      <!-- Group chat messages -->
+      <div id="group-chat-messages" class="chat-messages"></div>
+
+      <!-- Group typing indicator -->
+      <div id="group-typing-indicator" class="typing-indicator hidden">
+        <span id="group-typing-name" class="group-typing-name"></span>
+        <span></span><span></span><span></span>
+      </div>
+
+      <!-- Group input area -->
+      <footer class="input-area">
+        <div id="group-mode-selector" class="mode-selector">
+          <button class="mode-btn active" data-mode="befriend">BEFRIEND</button>
+          <button class="mode-btn" data-mode="flirt">FLIRT</button>
+          <button class="mode-btn" data-mode="interrogate">INTERROGATE</button>
+          <button class="mode-btn" data-mode="roast">ROAST</button>
+          <button class="mode-btn" data-mode="recruit">RECRUIT</button>
+          <button class="mode-btn" data-mode="apologize">APOLOGIZE</button>
+        </div>
+        <div class="message-row">
+          <textarea
+            id="group-input-message"
+            class="message-input"
+            placeholder="Say something to the group..."
+            rows="2"
+            maxlength="500"
+          ></textarea>
+          <button id="group-btn-send" class="send-btn">▶</button>
+        </div>
+        <div class="options-row">
+          <span class="group-round-note">All characters respond in turn</span>
+          <button id="group-btn-clear" class="ghost-btn">CLEAR</button>
+        </div>
+      </footer>
+    </div>
+
   </div>
 
   <script src="sidepanel.js" type="module"></script>
